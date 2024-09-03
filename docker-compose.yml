@@ -1,5 +1,8 @@
 services:
   stats-server:
+    build: stats/stats-server
+    image: ewn-stat-server
+    container_name: ewn_stat_server
     ports:
       - "9090:9090"
 
@@ -7,6 +10,9 @@ services:
     image: postgres:16.1
 
   ewm-service:
+    build: main-service
+    image: ewn-main-service
+    container_name: ewn_main_service
     ports:
       - "8080:8080"
 
