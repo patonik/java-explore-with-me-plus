@@ -12,6 +12,7 @@ import java.util.List;
 public class HttpStatsServerImpl implements HttpStatsServer {
 
     public static final String URL = "http://localhost:9090";
+
     private final RestTemplate restTemplate;
 
     @Override
