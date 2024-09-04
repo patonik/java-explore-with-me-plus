@@ -7,7 +7,7 @@ import org.springframework.web.util.UriComponentsBuilder;
 import java.util.List;
 
 @RequiredArgsConstructor
-public class HttpStatsServerImpl implements HttpStatsServer {
+public class HttpStatsClientImpl implements HttpStatsClient {
 
     public static final String URL = "http://localhost:9090";
 

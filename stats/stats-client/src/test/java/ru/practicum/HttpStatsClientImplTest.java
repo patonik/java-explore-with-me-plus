@@ -14,10 +14,10 @@ import static org.mockito.Mockito.when;
 
 @SpringBootTest
 @ContextConfiguration(classes = CommonConfig.class)
-public class HttpStatsServerImplTest {
+public class HttpStatsClientImplTest {
 
     @MockBean
-    private HttpStatsServer httpStatsServer;
+    private HttpStatsClient httpStatsClient;
 
     @Test
     void getStats_whenCalled_thenReturnsData() {
@@ -36,10 +36,10 @@ public class HttpStatsServerImplTest {
                     ]
                 """, "{", "}");
 
-        when(httpStatsServer.getStats(eq(start), eq(end), eq(uris), eq(unique), eq(String.class)))
+        when(httpStatsClient.getStats(eq(start), eq(end), eq(uris), eq(unique), eq(String.class)))
                 .thenReturn(expectedResponse);
 
-        var response = httpStatsServer.getStats(start, end, uris, unique, String.class);
+        var response = httpStatsClient.getStats(start, end, uris, unique, String.class);
         assertEquals(expectedResponse, response);
     }
 
@@ -60,10 +60,10 @@ public class HttpStatsServerImplTest {
                     %2$s
                 """, "{", "}");
 
-        when(httpStatsServer.sendHit(eq(hit), eq(String.class)))
+        when(httpStatsClient.sendHit(eq(hit), eq(String.class)))
                 .thenReturn(expectedResponse);
 
-        var response = httpStatsServer.sendHit(hit, String.class);
+        var response = httpStatsClient.sendHit(hit, String.class);
         assertEquals(expectedResponse, response);
     }
 }

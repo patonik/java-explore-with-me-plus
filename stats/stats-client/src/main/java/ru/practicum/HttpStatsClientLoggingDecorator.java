@@ -5,11 +5,11 @@ import lombok.extern.slf4j.Slf4j;
 import java.util.List;
 
 @Slf4j
-public class HttpStatsServerLoggingDecorator implements HttpStatsServer {
+public class HttpStatsClientLoggingDecorator implements HttpStatsClient {
 
-    private final HttpStatsServer delegate;
+    private final HttpStatsClient delegate;
 
-    public HttpStatsServerLoggingDecorator(HttpStatsServer delegate) {
+    public HttpStatsClientLoggingDecorator(HttpStatsClient delegate) {
         this.delegate = delegate;
     }
 

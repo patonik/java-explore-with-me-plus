@@ -3,9 +3,9 @@ package ru.practicum.configs;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.client.RestTemplate;
-import ru.practicum.HttpStatsServer;
-import ru.practicum.HttpStatsServerImpl;
-import ru.practicum.HttpStatsServerLoggingDecorator;
+import ru.practicum.HttpStatsClient;
+import ru.practicum.HttpStatsClientImpl;
+import ru.practicum.HttpStatsClientLoggingDecorator;
 
 @Configuration
 public class CommonConfig {
@@ -16,8 +16,8 @@ public class CommonConfig {
     }
 
     @Bean
-    public HttpStatsServer httpStatsServer(RestTemplate restTemplate) {
-        var httpStatsServer = new HttpStatsServerImpl(restTemplate);
-        return new HttpStatsServerLoggingDecorator(httpStatsServer);
+    public HttpStatsClient httpStatsServer(RestTemplate restTemplate) {
+        var httpStatsServer = new HttpStatsClientImpl(restTemplate);
+        return new HttpStatsClientLoggingDecorator(httpStatsServer);
     }
 }
