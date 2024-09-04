@@ -26,15 +26,15 @@ public class HttpStatsServerImplTest {
         var uris = List.of("/events/1", "/events/2");
         boolean unique = true;
 
-        var expectedResponse = """
-            [
-                {
-                    "app": "ewm-main-service",
-                    "uri": "/events/1",
-                    "hits": 6
-                }
-            ]
-        """;
+        var expectedResponse = String.format("""
+                    [
+                        %1$s
+                            "app": "ewm-main-service",
+                            "uri": "/events/1",
+                            "hits": 6
+                        %2$s
+                    ]
+                """, "{", "}");
 
         when(httpStatsServer.getStats(eq(start), eq(end), eq(uris), eq(unique), eq(String.class)))
                 .thenReturn(expectedResponse);
@@ -45,19 +45,20 @@ public class HttpStatsServerImplTest {
 
     @Test
     void sendHit_whenCalled_thenReturnsResponse() {
-        var hit = """
-            {
-                "app": "ewm-main-service",
-                "uri": "/events/1",
-                "ip": "192.163.0.1",
-                "timestamp": "2022-09-06 11:00:23"
-            }
-        """;
-        var expectedResponse = """
-            {
-                "response": "hit received"
-            }
-        """;
+        var hit = String.format("""
+                    %1$s
+                        "app": "ewm-main-service",
+                        "uri": "/events/1",
+                        "ip": "192.163.0.1",
+                        "timestamp": "2022-09-06 11:00:23"
+                    %2$s
+                """, "{", "}");
+
+        var expectedResponse = String.format("""
+                    %1$s
+                        "response": "hit received"
+                    %2$s
+                """, "{", "}");
 
         when(httpStatsServer.sendHit(eq(hit), eq(String.class)))
                 .thenReturn(expectedResponse);
