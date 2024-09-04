@@ -5,5 +5,11 @@ Template repository for Shareit project.
 
 ```mermaid
 erDiagram
-    HIT
+    HIT {
+        bigint id PK
+        string app
+        string uri
+        string ip
+        timestamp created
+    }
 ```
