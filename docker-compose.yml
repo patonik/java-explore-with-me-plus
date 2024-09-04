@@ -5,9 +5,27 @@ services:
     container_name: ewn_stat_server
     ports:
       - "9090:9090"
+    depends_on:
+      stats-db:
+        condition: service_healthy
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://db:6542/ewm_db
+      - SPRING_DATASOURCE_USERNAME=explorer
+      - SPRING_DATASOURCE_PASSWORD=explorer
 
   stats-db:
     image: postgres:16.1
+    environment:
+      POSTGRES_DB: stats-db
+      POSTGRES_USER: explorer
+      POSTGRES_PASSWORD: explorer
+    ports:
+      - "6542:5432"
+    healthcheck:
+      test: pg_isready -q -d $$POSTGRES_DB -U $$POSTGRES_USER
+      timeout: 5s
+      interval: 5s
+      retries: 10
 
   ewm-service:
     build: main-service
@@ -16,10 +34,10 @@ services:
     ports:
       - "8080:8080"
     depends_on:
-      db:
+      ewm-db:
         condition: service_healthy
     environment:
-      - SPRING_DATASOURCE_URL=jdbc:postgresql://db:6542/ewm_db
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://db:6541/ewm_db
       - SPRING_DATASOURCE_USERNAME=explorer
       - SPRING_DATASOURCE_PASSWORD=explorer
 
@@ -30,7 +48,7 @@ services:
       POSTGRES_USER: explorer
       POSTGRES_PASSWORD: explorer
     ports:
-      - "6542:5432"
+      - "6541:5432"
     healthcheck:
       test: pg_isready -q -d $$POSTGRES_DB -U $$POSTGRES_USER
       timeout: 5s
