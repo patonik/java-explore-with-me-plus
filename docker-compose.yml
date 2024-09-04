@@ -9,14 +9,14 @@ services:
       stats-db:
         condition: service_healthy
     environment:
-      - SPRING_DATASOURCE_URL=jdbc:postgresql://db:6542/ewm_db
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://stats-db:5432/stats_db
       - SPRING_DATASOURCE_USERNAME=explorer
       - SPRING_DATASOURCE_PASSWORD=explorer
 
   stats-db:
     image: postgres:16.1
     environment:
-      POSTGRES_DB: stats-db
+      POSTGRES_DB: stats_db
       POSTGRES_USER: explorer
       POSTGRES_PASSWORD: explorer
     ports:
@@ -37,7 +37,7 @@ services:
       ewm-db:
         condition: service_healthy
     environment:
-      - SPRING_DATASOURCE_URL=jdbc:postgresql://db:6541/ewm_db
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://ewm-db:5432/ewm_db
       - SPRING_DATASOURCE_USERNAME=explorer
       - SPRING_DATASOURCE_PASSWORD=explorer
 
