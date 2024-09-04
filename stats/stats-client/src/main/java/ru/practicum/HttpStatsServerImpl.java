@@ -33,5 +33,4 @@ public class HttpStatsServerImpl implements HttpStatsServer {
         var fullUrl = uriBuilder.build().toUri();
         return restTemplate.postForObject(fullUrl, hit, responseType);
     }
-
 }
