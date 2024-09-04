@@ -9,7 +9,6 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import ru.practicum.dto.HitListElementDto;
@@ -20,7 +19,6 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 @RestController
-@RequestMapping
 @Validated
 @RequiredArgsConstructor
 public class StatController {
@@ -35,7 +33,7 @@ public class StatController {
     public ResponseEntity<List<HitListElementDto>> getStats(
         @RequestParam("start") @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") LocalDateTime start,
         @RequestParam("end") @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") LocalDateTime end,
-        @RequestParam("uri[]") String[] uris,
+        @RequestParam("uris") String[] uris,
         @RequestParam(value = "unique", defaultValue = "false")
         Boolean unique) {
         return new ResponseEntity<>(statService.getHits(start, end, uris, unique), HttpStatus.OK);

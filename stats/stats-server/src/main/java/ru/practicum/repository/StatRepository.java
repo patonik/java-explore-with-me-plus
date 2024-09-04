@@ -11,20 +11,23 @@ import java.util.List;
 
 @Repository
 public interface StatRepository extends JpaRepository<ServiceHit, Long> {
-    @Query("select new ru.practicum.dto.HitListElementDto(s.app, s.uri, count(distinct s.ip)) " +
-        "from ServiceHit s " +
-        "where s.created >= :start and s.created <= :end and s.uri in (:uris) " +
-        "group by s.app, s.uri " +
-        "order by s.app, s.uri asc")
+    @Query("""
+        select new ru.practicum.dto.HitListElementDto(s.app, s.uri, count(distinct s.ip))
+        from ServiceHit s
+        where s.created between :start and :end and s.uri in (:uris)
+        group by s.app, s.uri
+        order by s.app, s.uri asc""")
     List<HitListElementDto> getHitListElementDtosDistinctIp(LocalDateTime start,
                                                             LocalDateTime end,
                                                             String[] uris);
 
-    @Query("select new ru.practicum.dto.HitListElementDto(s.app, s.uri, count(s.ip)) " +
-        "from ServiceHit s " +
-        "where s.created >= :start and s.created <= :end and s.uri in (:uris) " +
-        "group by s.app, s.uri " +
-        "order by s.app, s.uri asc")
+    @Query("""
+        select new ru.practicum.dto.HitListElementDto(s.app, s.uri, count(s.ip))
+        from ServiceHit s
+        where s.created between :start and :end
+        and s.uri in (:uris)
+        group by s.app, s.uri
+        order by s.app, s.uri asc""")
     List<HitListElementDto> getHitListElementDtos(LocalDateTime start,
                                                   LocalDateTime end,
                                                   String[] uris);
