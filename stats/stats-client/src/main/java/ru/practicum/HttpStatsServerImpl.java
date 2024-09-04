@@ -14,7 +14,7 @@ public class HttpStatsServerImpl implements HttpStatsServer {
     private final RestTemplate restTemplate;
 
     @Override
-    public <T> T getStats(String start, String end, List<String> uris, boolean unique, Class<T> responseType) {
+    public <R> R getStats(String start, String end, List<String> uris, boolean unique, Class<R> responseType) {
         var uriBuilder = UriComponentsBuilder.fromHttpUrl(URL)
                 .path("/stats")
                 .queryParam("start", start)

@@ -14,9 +14,9 @@ public class HttpStatsServerLoggingDecorator implements HttpStatsServer {
     }
 
     @Override
-    public <T> T getStats(String start, String end, List<String> uris, boolean unique, Class<T> responseType) {
+    public <R> R getStats(String start, String end, List<String> uris, boolean unique, Class<R> responseType) {
         log.info("Getting stats from {} to {} for URIs: {}", start, end, uris.toString());
-        T result = delegate.getStats(start, end, uris, unique, responseType);
+        R result = delegate.getStats(start, end, uris, unique, responseType);
         log.info("Stats received: {}", result);
         return result;
     }
