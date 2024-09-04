@@ -9,8 +9,11 @@ import lombok.NoArgsConstructor;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class HitListElementDto {
+public class StatResponseDto {
+
     private String app;
+
     private String uri;
+
     private Long hits;
 }

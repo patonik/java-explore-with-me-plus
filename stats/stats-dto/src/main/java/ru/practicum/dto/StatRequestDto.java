@@ -15,7 +15,7 @@ import java.time.LocalDateTime;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class ServiceHitDto {
+public class StatRequestDto {
 
     @NotBlank(message = "App cannot be blank or empty")
     private String app;
