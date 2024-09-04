@@ -1,13 +1,11 @@
 package ru.practicum;
 
 import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import java.util.List;
 
-@Component
 @RequiredArgsConstructor
 public class HttpStatsServerImpl implements HttpStatsServer {
 
