@@ -27,14 +27,14 @@ public class HttpStatsServerImplTest {
         boolean unique = true;
 
         var expectedResponse = """
-                    [
-                        {
-                            "app": "ewm-main-service",
-                            "uri": "/events/1",
-                            "hits": 6
-                        }
-                    ]
-                """;
+            [
+                {
+                    "app": "ewm-main-service",
+                    "uri": "/events/1",
+                    "hits": 6
+                }
+            ]
+        """;
 
         when(httpStatsServer.getStats(eq(start), eq(end), eq(uris), eq(unique), eq(String.class)))
                 .thenReturn(expectedResponse);
@@ -46,18 +46,18 @@ public class HttpStatsServerImplTest {
     @Test
     void sendHit_whenCalled_thenReturnsResponse() {
         var hit = """
-                    {
-                        "app": "ewm-main-service",
-                        "uri": "/events/1",
-                        "ip": "192.163.0.1",
-                        "timestamp": "2022-09-06 11:00:23"
-                    }
-                """;
+            {
+                "app": "ewm-main-service",
+                "uri": "/events/1",
+                "ip": "192.163.0.1",
+                "timestamp": "2022-09-06 11:00:23"
+            }
+        """;
         var expectedResponse = """
-                    {
-                        "response": "hit received"
-                    }
-                """;
+            {
+                "response": "hit received"
+            }
+        """;
 
         when(httpStatsServer.sendHit(eq(hit), eq(String.class)))
                 .thenReturn(expectedResponse);
