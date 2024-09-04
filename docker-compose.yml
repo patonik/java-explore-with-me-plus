@@ -15,6 +15,24 @@ services:
     container_name: ewn_main_service
     ports:
       - "8080:8080"
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://db:6542/ewm_db
+      - SPRING_DATASOURCE_USERNAME=explorer
+      - SPRING_DATASOURCE_PASSWORD=explorer
 
   ewm-db:
     image: postgres:16.1
+    environment:
+      POSTGRES_DB: ewm_db
+      POSTGRES_USER: explorer
+      POSTGRES_PASSWORD: explorer
+    ports:
+      - "6542:5432"
+    healthcheck:
+      test: pg_isready -q -d $$POSTGRES_DB -U $$POSTGRES_USER
+      timeout: 5s
+      interval: 5s
+      retries: 10
