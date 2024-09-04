@@ -81,7 +81,7 @@ class StatControllerTest {
         mockMvc.perform(get("/stats")
                 .param("start", "2023-01-01 00:00:00")
                 .param("end", "2023-01-02 00:00:00")
-                .param("uri[]", "/test")
+                .param("uris", "/test")
                 .param("unique", "true"))
             .andExpect(status().isOk())
             .andExpect(content().contentType(MediaType.APPLICATION_JSON))
