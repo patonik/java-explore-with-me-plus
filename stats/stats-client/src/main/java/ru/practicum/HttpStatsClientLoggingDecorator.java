@@ -3,6 +3,7 @@ package ru.practicum;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.List;
+import java.util.Optional;
 
 @Slf4j
 public class HttpStatsClientLoggingDecorator implements HttpStatsClient {
@@ -14,7 +15,7 @@ public class HttpStatsClientLoggingDecorator implements HttpStatsClient {
     }
 
     @Override
-    public <R> R getStats(String start, String end, List<String> uris, boolean unique, Class<R> responseType) {
+    public <R> Optional<R> getStats(String start, String end, List<String> uris, boolean unique, Class<R> responseType) {
         log.info("Getting stats from {} to {} for URIs: {}", start, end, uris.toString());
         R result = delegate.getStats(start, end, uris, unique, responseType);
         log.info("Stats received: {}", result);
@@ -22,7 +23,7 @@ public class HttpStatsClientLoggingDecorator implements HttpStatsClient {
     }
 
     @Override
-    public <T, R> R sendHit(T hit, Class<R> responseType) {
+    public <T, R> Optional<R> sendHit(T hit, Class<R> responseType) {
         log.info("Sending hit: {}", hit);
         R result = delegate.sendHit(hit, responseType);
         log.info("Hit response: {}", result);
