@@ -7,8 +7,10 @@ import org.springframework.test.context.ContextConfiguration;
 import ru.practicum.configs.CommonConfig;
 
 import java.util.List;
+import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 
@@ -37,10 +39,11 @@ public class HttpStatsClientImplTest {
                 """, "{", "}");
 
         when(httpStatsClient.getStats(eq(start), eq(end), eq(uris), eq(unique), eq(String.class)))
-                .thenReturn(expectedResponse);
+                .thenReturn(Optional.of(expectedResponse));
 
         var response = httpStatsClient.getStats(start, end, uris, unique, String.class);
-        assertEquals(expectedResponse, response);
+        assertFalse(response.isEmpty());
+        assertEquals(expectedResponse, response.get());
     }
 
     @Test
@@ -61,9 +64,10 @@ public class HttpStatsClientImplTest {
                 """, "{", "}");
 
         when(httpStatsClient.sendHit(eq(hit), eq(String.class)))
-                .thenReturn(expectedResponse);
+                .thenReturn(Optional.of(expectedResponse));
 
         var response = httpStatsClient.sendHit(hit, String.class);
-        assertEquals(expectedResponse, response);
+        assertFalse(response.isEmpty());
+        assertEquals(expectedResponse, response.get());
     }
 }
