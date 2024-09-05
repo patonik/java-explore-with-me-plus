@@ -31,7 +31,7 @@ public class HttpStatsClientLoggingDecorator implements HttpStatsClient {
             }
             return optResult;
         } catch (RestClientException e) {
-            log.error("Error during fetching stats: {}", e.getMessage());
+            log.error("Error during fetching stats: {}", e.getMessage(), e);
             return Optional.empty();
         }
     }
@@ -48,7 +48,7 @@ public class HttpStatsClientLoggingDecorator implements HttpStatsClient {
             }
             return optResult;
         } catch (RestClientException e) {
-            log.error("Error during sending hit: {}", e.getMessage());
+            log.error("Error during fetching hit: {}", e.getMessage(), e);
             return Optional.empty();
         }
     }
