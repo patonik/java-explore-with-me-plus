@@ -22,7 +22,7 @@ public class HttpStatsClientImplTest {
     private HttpStatsClient httpStatsClient;
 
     @Test
-    void getStats_whenCalled_thenReturnsData() {
+    void getStats_Optional_whenCalled_thenReturnsData() {
         var start = "2023-01-01 00:00:00";
         var end = "2023-12-31 23:59:59";
         var uris = List.of("/events/1", "/events/2");
@@ -38,16 +38,16 @@ public class HttpStatsClientImplTest {
                     ]
                 """, "{", "}");
 
-        when(httpStatsClient.getStats(eq(start), eq(end), eq(uris), eq(unique), eq(String.class)))
+        when(httpStatsClient.getStatsOptional(eq(start), eq(end), eq(uris), eq(unique), eq(String.class)))
                 .thenReturn(Optional.of(expectedResponse));
 
-        var response = httpStatsClient.getStats(start, end, uris, unique, String.class);
+        var response = httpStatsClient.getStatsOptional(start, end, uris, unique, String.class);
         assertFalse(response.isEmpty());
         assertEquals(expectedResponse, response.get());
     }
 
     @Test
-    void sendHit_whenCalled_thenReturnsResponse() {
+    void sendHit_Optional_whenCalled_thenReturnsResponse() {
         var hit = String.format("""
                     %1$s
                         "app": "ewm-main-service",
@@ -63,10 +63,10 @@ public class HttpStatsClientImplTest {
                     %2$s
                 """, "{", "}");
 
-        when(httpStatsClient.sendHit(eq(hit), eq(String.class)))
+        when(httpStatsClient.sendHitOptional(eq(hit), eq(String.class)))
                 .thenReturn(Optional.of(expectedResponse));
 
-        var response = httpStatsClient.sendHit(hit, String.class);
+        var response = httpStatsClient.sendHitOptional(hit, String.class);
         assertFalse(response.isEmpty());
         assertEquals(expectedResponse, response.get());
     }
