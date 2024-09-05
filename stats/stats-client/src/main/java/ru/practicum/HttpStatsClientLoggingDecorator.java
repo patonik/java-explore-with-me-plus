@@ -18,7 +18,11 @@ public class HttpStatsClientLoggingDecorator implements HttpStatsClient {
     public <R> Optional<R> getStats(String start, String end, List<String> uris, boolean unique, Class<R> responseType) {
         log.info("Getting stats from {} to {} for URIs: {}", start, end, uris.toString());
         Optional<R> result = delegate.getStats(start, end, uris, unique, responseType);
-        log.info("Stats received: {}", result);
+        if (result.isPresent()) {
+            log.info("Stats received: {}", result.get());
+        } else {
+            log.info("Stats received: no stats available");
+        }
         return result;
     }
 
@@ -26,7 +30,11 @@ public class HttpStatsClientLoggingDecorator implements HttpStatsClient {
     public <T, R> Optional<R> sendHit(T hit, Class<R> responseType) {
         log.info("Sending hit: {}", hit);
         Optional<R> result = delegate.sendHit(hit, responseType);
-        log.info("Hit response: {}", result);
+        if (result.isPresent()) {
+            log.info("Hit response: {}", result.get());
+        } else {
+            log.info("Hit response: no response received");
+        }
         return result;
     }
 }
