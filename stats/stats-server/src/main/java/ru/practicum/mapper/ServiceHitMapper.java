@@ -1,13 +1,16 @@
 package ru.practicum.mapper;
 
 import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
 import org.mapstruct.MappingConstants;
-import ru.practicum.dto.ServiceHitDto;
+import ru.practicum.dto.StatRequestDto;
 import ru.practicum.model.ServiceHit;
 
 @Mapper(componentModel = MappingConstants.ComponentModel.SPRING)
 public interface ServiceHitMapper {
-    ServiceHitDto toDto(ServiceHit serviceHit);
+    @Mapping(target = "timestamp", source = "created")
+    StatRequestDto toDto(ServiceHit serviceHit);
 
-    ServiceHit toEntity(ServiceHitDto serviceHitDto);
+    @Mapping(target = "created", source = "timestamp")
+    ServiceHit toEntity(StatRequestDto statRequestDto);
 }

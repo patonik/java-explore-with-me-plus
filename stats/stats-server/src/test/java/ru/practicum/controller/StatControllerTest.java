@@ -12,8 +12,8 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
-import ru.practicum.dto.HitListElementDto;
-import ru.practicum.dto.ServiceHitDto;
+import ru.practicum.dto.StatRequestDto;
+import ru.practicum.dto.StatResponseDto;
 import ru.practicum.service.StatService;
 
 import java.time.LocalDateTime;
@@ -45,19 +45,19 @@ class StatControllerTest {
 
     @Test
     void registerHit() throws Exception {
-        ServiceHitDto serviceHitDto = ServiceHitDto.builder()
+        StatRequestDto statRequestDto = StatRequestDto.builder()
             .app("testApp")
             .uri("/test")
             .ip("127.0.0.1")
             .timestamp(LocalDateTime.now())
             .build();
 
-        Mockito.when(statService.registerHit(any(ServiceHitDto.class)))
-            .thenReturn(serviceHitDto);
+        Mockito.when(statService.registerHit(any(StatRequestDto.class)))
+            .thenReturn(statRequestDto);
 
         mockMvc.perform(post("/hit")
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(serviceHitDto)))
+                .content(objectMapper.writeValueAsString(statRequestDto)))
             .andExpect(status().isCreated())
             .andExpect(content().contentType(MediaType.APPLICATION_JSON))
             .andExpect(jsonPath("$.app").value("testApp"))
@@ -67,16 +67,16 @@ class StatControllerTest {
 
     @Test
     void getStats() throws Exception {
-        HitListElementDto hitListElementDto = HitListElementDto.builder()
+        StatResponseDto statResponseDto = StatResponseDto.builder()
             .app("testApp")
             .uri("/test")
             .hits(10L)
             .build();
 
-        List<HitListElementDto> hitListElementDtos = Collections.singletonList(hitListElementDto);
+        List<StatResponseDto> statResponseDtos = Collections.singletonList(statResponseDto);
 
         Mockito.when(statService.getHits(any(String.class), any(String.class), any(String[].class), anyBoolean()))
-            .thenReturn(hitListElementDtos);
+            .thenReturn(statResponseDtos);
 
         mockMvc.perform(get("/stats")
                 .param("start", "2023-01-01 00:00:00")
