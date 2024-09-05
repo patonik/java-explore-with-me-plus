@@ -19,7 +19,11 @@ public class HttpStatsClientImpl implements HttpStatsClient {
     private final RestTemplate restTemplate;
 
     @Override
-    public <R> Optional<R> getStatsOptional(String start, String end, List<String> uris, boolean unique, Class<R> responseType) {
+    public <R> Optional<R> getStatsOptional(String start,
+                                            String end,
+                                            List<String> uris,
+                                            boolean unique,
+                                            Class<R> responseType) {
         return Optional.ofNullable(restTemplate.getForObject(UriComponentsBuilder.fromHttpUrl(URL)
                 .path(STATS_PATH)
                 .queryParam("start", start)
