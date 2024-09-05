@@ -5,7 +5,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.test.context.ActiveProfiles;
-import ru.practicum.dto.HitListElementDto;
+import ru.practicum.dto.StatResponseDto;
 import ru.practicum.model.ServiceHit;
 
 import java.time.LocalDateTime;
@@ -59,7 +59,7 @@ class StatRepositoryTest {
         String[] uris = {"/endpoint1", "/endpoint2"};
         boolean unique = true;
 
-        List<HitListElementDto> result = statRepository.getHitListElementDtos(start, end, uris, unique);
+        List<StatResponseDto> result = statRepository.getHitListElementDtos(start, end, uris, unique);
 
         assertThat(result).hasSize(2);
         assertThat(result).extracting("app").containsOnly("app1");
@@ -74,7 +74,7 @@ class StatRepositoryTest {
         String[] uris = {"/endpoint1", "/endpoint2"};
         boolean unique = false;
 
-        List<HitListElementDto> result = statRepository.getHitListElementDtos(start, end, uris, unique);
+        List<StatResponseDto> result = statRepository.getHitListElementDtos(start, end, uris, unique);
         System.out.println(statRepository.findAll());
         assertThat(result).hasSize(2);
         assertThat(result).extracting("app").containsOnly("app1");

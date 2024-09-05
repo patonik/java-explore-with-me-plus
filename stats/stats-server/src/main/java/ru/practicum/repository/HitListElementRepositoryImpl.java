@@ -7,7 +7,7 @@ import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.Expression;
 import jakarta.persistence.criteria.Predicate;
 import jakarta.persistence.criteria.Root;
-import ru.practicum.dto.HitListElementDto;
+import ru.practicum.dto.StatResponseDto;
 import ru.practicum.model.ServiceHit;
 
 import java.time.LocalDateTime;
@@ -20,12 +20,12 @@ public class HitListElementRepositoryImpl implements HitListElementRepository {
     private EntityManager em;
 
     @Override
-    public List<HitListElementDto> getHitListElementDtos(LocalDateTime start,
-                                                         LocalDateTime end,
-                                                         String[] uris,
-                                                         boolean unique) {
+    public List<StatResponseDto> getHitListElementDtos(LocalDateTime start,
+                                                       LocalDateTime end,
+                                                       String[] uris,
+                                                       boolean unique) {
         CriteriaBuilder criteriaBuilder = em.getCriteriaBuilder();
-        CriteriaQuery<HitListElementDto> criteriaQuery = criteriaBuilder.createQuery(HitListElementDto.class);
+        CriteriaQuery<StatResponseDto> criteriaQuery = criteriaBuilder.createQuery(StatResponseDto.class);
         Root<ServiceHit> root = criteriaQuery.from(ServiceHit.class);
         List<Predicate> predicates = new ArrayList<>();
         Predicate datePredicate = criteriaBuilder.between(root.get("created"), start, end);
@@ -38,7 +38,7 @@ public class HitListElementRepositoryImpl implements HitListElementRepository {
             ? criteriaBuilder.countDistinct(root.get("ip"))
             : criteriaBuilder.count(root.get("ip"));
         criteriaQuery.select(criteriaBuilder.construct(
-            HitListElementDto.class,
+            StatResponseDto.class,
             root.get("app"),
             root.get("uri"),
             hitCountExpression
