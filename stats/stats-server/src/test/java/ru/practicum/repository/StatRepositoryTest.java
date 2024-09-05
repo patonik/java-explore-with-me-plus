@@ -57,8 +57,9 @@ class StatRepositoryTest {
         LocalDateTime start = LocalDateTime.parse("2023-01-01 00:00:00", formatter);
         LocalDateTime end = LocalDateTime.parse("2023-01-02 23:59:59", formatter);
         String[] uris = {"/endpoint1", "/endpoint2"};
+        boolean unique = true;
 
-        List<HitListElementDto> result = statRepository.getHitListElementDtosDistinctIp(start, end, uris);
+        List<HitListElementDto> result = statRepository.getHitListElementDtos(start, end, uris, unique);
 
         assertThat(result).hasSize(2);
         assertThat(result).extracting("app").containsOnly("app1");
@@ -71,8 +72,9 @@ class StatRepositoryTest {
         LocalDateTime start = LocalDateTime.parse("2023-01-01 00:00:00", formatter);
         LocalDateTime end = LocalDateTime.parse("2023-01-02 23:59:59", formatter);
         String[] uris = {"/endpoint1", "/endpoint2"};
+        boolean unique = false;
 
-        List<HitListElementDto> result = statRepository.getHitListElementDtos(start, end, uris);
+        List<HitListElementDto> result = statRepository.getHitListElementDtos(start, end, uris, unique);
         System.out.println(statRepository.findAll());
         assertThat(result).hasSize(2);
         assertThat(result).extracting("app").containsOnly("app1");

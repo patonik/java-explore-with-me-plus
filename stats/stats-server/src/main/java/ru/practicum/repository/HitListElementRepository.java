@@ -8,6 +8,6 @@ import java.util.List;
 public interface HitListElementRepository {
     List<HitListElementDto> getHitListElementDtos(LocalDateTime start,
                                                   LocalDateTime end,
-                                                  Object[] uris,
+                                                  String[] uris,
                                                   boolean unique);
 }

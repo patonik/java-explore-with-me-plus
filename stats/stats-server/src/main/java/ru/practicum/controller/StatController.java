@@ -2,6 +2,7 @@ package ru.practicum.controller;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
@@ -19,11 +20,13 @@ import java.util.List;
 @RestController
 @Validated
 @RequiredArgsConstructor
+@Slf4j
 public class StatController {
     private final StatService statService;
 
     @PostMapping("/hit")
     public ResponseEntity<ServiceHitDto> registerHit(@RequestBody @Valid ServiceHitDto serviceHitDto) {
+        log.info("Registering hit: {}", serviceHitDto);
         return new ResponseEntity<>(statService.registerHit(serviceHitDto), HttpStatus.CREATED);
     }
 
@@ -31,7 +34,7 @@ public class StatController {
     public ResponseEntity<List<HitListElementDto>> getStats(
         @RequestParam("start") String start,
         @RequestParam("end") String end,
-        @RequestParam(value = "uris", required = false, defaultValue = "new String[0]") String[] uris,
+        @RequestParam(value = "uris", required = false) String[] uris,
         @RequestParam(value = "unique", defaultValue = "false")
         Boolean unique) {
         return new ResponseEntity<>(statService.getHits(start, end, uris, unique), HttpStatus.OK);

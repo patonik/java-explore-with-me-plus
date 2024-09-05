@@ -4,6 +4,7 @@ import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
+import jakarta.persistence.criteria.Expression;
 import jakarta.persistence.criteria.Predicate;
 import jakarta.persistence.criteria.Root;
 import ru.practicum.dto.HitListElementDto;
@@ -11,6 +12,7 @@ import ru.practicum.model.ServiceHit;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 public class HitListElementRepositoryImpl implements HitListElementRepository {
@@ -20,7 +22,7 @@ public class HitListElementRepositoryImpl implements HitListElementRepository {
     @Override
     public List<HitListElementDto> getHitListElementDtos(LocalDateTime start,
                                                          LocalDateTime end,
-                                                         Object[] uris,
+                                                         String[] uris,
                                                          boolean unique) {
         CriteriaBuilder criteriaBuilder = em.getCriteriaBuilder();
         CriteriaQuery<HitListElementDto> criteriaQuery = criteriaBuilder.createQuery(HitListElementDto.class);
@@ -29,18 +31,21 @@ public class HitListElementRepositoryImpl implements HitListElementRepository {
         Predicate datePredicate = criteriaBuilder.between(root.get("created"), start, end);
         predicates.add(datePredicate);
         if (uris != null && uris.length > 0) {
-            Predicate uriPredicate = root.in(uris);
+            Predicate uriPredicate = root.get("uri").in(Arrays.asList(uris));
             predicates.add(uriPredicate);
         }
+        Expression<Long> hitCountExpression = unique
+            ? criteriaBuilder.countDistinct(root.get("ip"))
+            : criteriaBuilder.count(root.get("ip"));
         criteriaQuery.select(criteriaBuilder.construct(
             HitListElementDto.class,
             root.get("app"),
             root.get("uri"),
-            unique ? criteriaBuilder.countDistinct(root.get("uri")) : criteriaBuilder.count(root.get("uri"))
+            hitCountExpression
         ));
         criteriaQuery.where(predicates.toArray(new Predicate[0]))
             .groupBy(root.get("app"), root.get("uri"))
-            .orderBy(criteriaBuilder.asc(root.get("uri")), criteriaBuilder.asc(root.get("uri")));
+            .orderBy(criteriaBuilder.desc(hitCountExpression));
         return em.createQuery(criteriaQuery).getResultList();
     }
 }
