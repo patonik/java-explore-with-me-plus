@@ -28,8 +28,8 @@ public class StatService {
         LocalDateTime from;
         LocalDateTime to;
         try {
-            from = (LocalDateTime) DATE_TIME_FORMATTER.parse(start);
-            to = (LocalDateTime) DATE_TIME_FORMATTER.parse(end);
+            from = LocalDateTime.parse(start, DATE_TIME_FORMATTER);
+            to = LocalDateTime.parse(end, DATE_TIME_FORMATTER);
         } catch (DateTimeParseException e) {
             throw new RuntimeException(e);
         }

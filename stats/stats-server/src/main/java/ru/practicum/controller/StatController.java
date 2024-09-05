@@ -31,7 +31,7 @@ public class StatController {
     public ResponseEntity<List<HitListElementDto>> getStats(
         @RequestParam("start") String start,
         @RequestParam("end") String end,
-        @RequestParam("uris") String[] uris,
+        @RequestParam(value = "uris", required = false, defaultValue = "new String[0]") String[] uris,
         @RequestParam(value = "unique", defaultValue = "false")
         Boolean unique) {
         return new ResponseEntity<>(statService.getHits(start, end, uris, unique), HttpStatus.OK);

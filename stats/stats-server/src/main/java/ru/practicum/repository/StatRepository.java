@@ -10,7 +10,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 @Repository
-public interface StatRepository extends JpaRepository<ServiceHit, Long> {
+public interface StatRepository extends JpaRepository<ServiceHit, Long>, HitListElementRepository {
     @Query("""
         select new ru.practicum.dto.HitListElementDto(s.app, s.uri, count(distinct s.ip))
         from ServiceHit s
