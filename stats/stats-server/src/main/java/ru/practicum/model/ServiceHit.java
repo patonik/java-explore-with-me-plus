@@ -26,11 +26,11 @@ public class ServiceHit {
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "HIT_ID_SEQ")
     @SequenceGenerator(name = "HIT_ID_SEQ", sequenceName = "HIT_ID_SEQ", allocationSize = 1)
-    Long id;
-    String app;
-    String uri;
-    String ip;
-    LocalDateTime created;
+    private Long id;
+    private String app;
+    private String uri;
+    private String ip;
+    private LocalDateTime created;
 
     @Override
     public boolean equals(Object o) {
