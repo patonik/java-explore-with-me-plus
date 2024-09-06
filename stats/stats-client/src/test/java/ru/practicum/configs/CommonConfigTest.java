@@ -18,13 +18,13 @@ public class CommonConfigTest {
 
     @Test
     void httpStatsServer_whenContextLoads_thenBeanShouldNotBeNull() {
-        var httpStatsServer = context.getBean("httpStatsServer");
+        var httpStatsServer = context.getBean("createHttpStatsServer");
         assertNotNull(httpStatsServer);
     }
 
     @Test
     void restTemplate_whenContextLoads_thenBeanShouldNotBeNull() {
-        var restTemplate = context.getBean("restTemplate");
+        var restTemplate = context.getBean("createRestTemplate");
         assertNotNull(restTemplate);
     }
 }
