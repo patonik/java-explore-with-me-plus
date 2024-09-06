@@ -1,9 +1,9 @@
-package ru.practicum.dto;
+package ru.practicum.dto.user;
 
 import lombok.Data;
 
 @Data
-public class CategoryDto {
+public class UserShortDto {
     private Long id;
     private String name;
 }

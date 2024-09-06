@@ -6,17 +6,17 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-import ru.practicum.dto.CompilationDto;
+import ru.practicum.dto.compilation.CompilationDto;
 
 import java.util.List;
 
 @RestController
 @RequestMapping("/compilations")
-public class CompilationController {
+public class PublicCompilationController {
     @GetMapping
     public ResponseEntity<List<CompilationDto>> getCompilations(@RequestParam Boolean pinned,
-                                                                @RequestParam(defaultValue = "0") Integer from,
-                                                                @RequestParam(defaultValue = "10") Integer size) {
+                                                                @RequestParam(required = false, defaultValue = "0") Integer from,
+                                                                @RequestParam(required = false, defaultValue = "10") Integer size) {
         return ResponseEntity.ok().build();
     }
 

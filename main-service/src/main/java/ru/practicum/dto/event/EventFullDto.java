@@ -1,7 +1,9 @@
-package ru.practicum.dto;
+package ru.practicum.dto.event;
 
 import lombok.Builder;
 import lombok.Data;
+import ru.practicum.dto.category.CategoryDto;
+import ru.practicum.dto.user.UserShortDto;
 
 import java.time.LocalDateTime;
 
@@ -22,5 +24,5 @@ public class EventFullDto {
     private Integer participantLimit;
     private Boolean requestModeration;
     private String title;
-    private String state;
+    private State state;
 }
