@@ -38,10 +38,10 @@ public class HttpStatsClientImplTest {
                     ]
                 """, "{", "}");
 
-        when(httpStatsClient.getStatsOptional(eq(start), eq(end), eq(uris), eq(unique), eq(String.class)))
+        when(httpStatsClient.getStats(eq(start), eq(end), eq(uris), eq(unique), eq(String.class)))
                 .thenReturn(Optional.of(expectedResponse));
 
-        var response = httpStatsClient.getStatsOptional(start, end, uris, unique, String.class);
+        var response = httpStatsClient.getStats(start, end, uris, unique, String.class);
         assertFalse(response.isEmpty());
         assertEquals(expectedResponse, response.get());
     }
@@ -63,10 +63,10 @@ public class HttpStatsClientImplTest {
                     %2$s
                 """, "{", "}");
 
-        when(httpStatsClient.sendHitOptional(eq(hit), eq(String.class)))
+        when(httpStatsClient.sendHit(eq(hit), eq(String.class)))
                 .thenReturn(Optional.of(expectedResponse));
 
-        var response = httpStatsClient.sendHitOptional(hit, String.class);
+        var response = httpStatsClient.sendHit(hit, String.class);
         assertFalse(response.isEmpty());
         assertEquals(expectedResponse, response.get());
     }
