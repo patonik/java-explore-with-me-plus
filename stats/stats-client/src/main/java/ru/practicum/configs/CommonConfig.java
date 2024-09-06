@@ -11,12 +11,12 @@ import ru.practicum.HttpStatsClientLoggingDecorator;
 public class CommonConfig {
 
     @Bean
-    public RestTemplate restTemplate() {
+    public RestTemplate createRestTemplate() {
         return new RestTemplate();
     }
 
     @Bean
-    public HttpStatsClient httpStatsServer(RestTemplate restTemplate) {
+    public HttpStatsClient createHttpStatsServer(RestTemplate restTemplate) {
         var httpStatsServer = new HttpStatsClientImpl(restTemplate);
         return new HttpStatsClientLoggingDecorator(httpStatsServer);
     }
