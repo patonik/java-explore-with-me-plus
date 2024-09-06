@@ -23,11 +23,12 @@ public class HttpStatsClientImplTest {
 
     @Test
     void getStats_Optional_whenCalled_thenReturnsData() {
-        var start = "2023-01-01 00:00:00";
-        var end = "2023-12-31 23:59:59";
-        var uris = List.of("/events/1", "/events/2");
-        boolean unique = true;
-
+        var params = StatsParameters.builder()
+                .start("2023-01-01 00:00:00")
+                .end("2023-12-31 23:59:59")
+                .uris(List.of("/events/1", "/events/2"))
+                .unique(true)
+                .build();
         var expectedResponse = String.format("""
                     [
                         %1$s
@@ -38,10 +39,10 @@ public class HttpStatsClientImplTest {
                     ]
                 """, "{", "}");
 
-        when(httpStatsClient.getStats(eq(start), eq(end), eq(uris), eq(unique), eq(String.class)))
+        when(httpStatsClient.getStats(params))
                 .thenReturn(Optional.of(expectedResponse));
 
-        var response = httpStatsClient.getStats(start, end, uris, unique, String.class);
+        var response = httpStatsClient.getStats(params);
         assertFalse(response.isEmpty());
         assertEquals(expectedResponse, response.get());
     }
@@ -56,7 +57,6 @@ public class HttpStatsClientImplTest {
                         "timestamp": "2022-09-06 11:00:23"
                     %2$s
                 """, "{", "}");
-
         var expectedResponse = String.format("""
                     %1$s
                         "response": "hit received"

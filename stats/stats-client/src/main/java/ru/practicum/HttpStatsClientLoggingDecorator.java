@@ -3,7 +3,6 @@ package ru.practicum;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.client.RestClientException;
 
-import java.util.List;
 import java.util.Optional;
 
 @Slf4j
@@ -16,14 +15,10 @@ public class HttpStatsClientLoggingDecorator implements HttpStatsClient {
     }
 
     @Override
-    public <R> Optional<R> getStats(String start,
-                                    String end,
-                                    List<String> uris,
-                                    boolean unique,
-                                    Class<R> responseType) {
-        log.info("Getting stats from {} to {} for URIs: {}", start, end, uris.toString());
+    public <R> Optional<R> getStats(StatsParameters<R> params) {
+        log.info("Getting stats: {}", params.toString());
         try {
-            var optResult = delegate.getStats(start, end, uris, unique, responseType);
+            var optResult = delegate.getStats(params);
             if (optResult.isPresent()) {
                 log.info("Stats received: {}", optResult.get());
             } else {
@@ -37,10 +32,10 @@ public class HttpStatsClientLoggingDecorator implements HttpStatsClient {
     }
 
     @Override
-    public <T, R> Optional<R> sendHit(T hit, Class<R> responseType) {
-        log.info("Sending hit: {}", hit);
+    public <T, R> Optional<R> sendHit(T hitDto, Class<R> responseType) {
+        log.info("Sending hitDto: {}", hitDto);
         try {
-            var optResult = delegate.sendHit(hit, responseType);
+            var optResult = delegate.sendHit(hitDto, responseType);
             if (optResult.isPresent()) {
                 log.info("Hit response: {}", optResult.get());
             } else {
@@ -48,7 +43,7 @@ public class HttpStatsClientLoggingDecorator implements HttpStatsClient {
             }
             return optResult;
         } catch (RestClientException e) {
-            log.error("Error during fetching hit: {}", e.getMessage(), e);
+            log.error("Error during fetching hitDto: {}", e.getMessage(), e);
             return Optional.empty();
         }
     }
