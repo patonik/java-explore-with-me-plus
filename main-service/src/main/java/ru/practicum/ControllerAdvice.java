@@ -8,6 +8,8 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import ru.practicum.exception.ApiError;
+import ru.practicum.exception.ConflictException;
+import ru.practicum.exception.NotFoundException;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -25,11 +27,7 @@ public class ControllerAdvice {
         log.warn("ConstraintViolation: {}", message);
         List<String> errors = new ArrayList<>();
         errors.add(message);
-        Throwable cause = e.getCause();
-        while (cause != null) {
-            errors.add(cause.getMessage());
-            cause = cause.getCause();
-        }
+        errors = fillErrors(errors, e.getCause());
         Set<ConstraintViolation<?>> constraintViolations = e.getConstraintViolations();
         StringJoiner reason = new StringJoiner(", ");
         for (ConstraintViolation<?> constraintViolation : constraintViolations) {
@@ -42,5 +40,45 @@ public class ControllerAdvice {
             .httpStatus(HttpStatus.BAD_REQUEST)
             .timestamp(LocalDateTime.now())
             .build();
+    }
+
+    @ResponseStatus(HttpStatus.CONFLICT)
+    @ExceptionHandler(ConflictException.class)
+    public ApiError handleConflictException(final ConflictException e) {
+        String message = e.getMessage();
+        log.warn("Conflict: {}", message);
+        List<String> errors = new ArrayList<>();
+        errors.add(message);
+        errors = fillErrors(errors, e.getCause());
+        return ApiError.builder()
+            .errors(errors)
+            .httpStatus(HttpStatus.CONFLICT)
+            .reason(errors.getLast())
+            .timestamp(LocalDateTime.now())
+            .build();
+    }
+
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    @ExceptionHandler(NotFoundException.class)
+    public ApiError handleConflictException(final NotFoundException e) {
+        String message = e.getMessage();
+        log.warn("Not Found: {}", message);
+        List<String> errors = new ArrayList<>();
+        errors.add(message);
+        errors = fillErrors(errors, e.getCause());
+        return ApiError.builder()
+            .errors(errors)
+            .httpStatus(HttpStatus.NOT_FOUND)
+            .reason(errors.getLast())
+            .timestamp(LocalDateTime.now())
+            .build();
+    }
+
+    private static List<String> fillErrors(List<String> errors, Throwable cause) {
+        while (cause != null) {
+            errors.add(cause.getMessage());
+            cause = cause.getCause();
+        }
+        return errors;
     }
 }

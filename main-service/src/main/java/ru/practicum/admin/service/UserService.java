@@ -11,6 +11,7 @@ import ru.practicum.dto.user.NewUserRequestMapper;
 import ru.practicum.dto.user.UserDto;
 import ru.practicum.dto.user.UserDtoMapper;
 import ru.practicum.exception.ConflictException;
+import ru.practicum.exception.NotFoundException;
 import ru.practicum.model.User;
 
 import java.util.List;
@@ -39,7 +40,7 @@ public class UserService {
 
     public void deleteUser(Long userId) {
         if (!userRepository.existsById(userId)) {
-            throw new ConflictException("User not found");
+            throw new NotFoundException("User not found");
         }
         userRepository.deleteById(userId);
     }
