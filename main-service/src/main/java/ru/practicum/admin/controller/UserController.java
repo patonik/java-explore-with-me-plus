@@ -17,7 +17,6 @@ import ru.practicum.admin.service.UserService;
 import ru.practicum.dto.user.NewUserRequest;
 import ru.practicum.dto.user.UserDto;
 
-import java.util.Collections;
 import java.util.List;
 
 
@@ -37,16 +36,17 @@ public class UserController {
     public ResponseEntity<List<UserDto>> getUsers(@RequestParam Long[] ids,
                                                   @RequestParam(required = false, defaultValue = "0") Integer from,
                                                   @RequestParam(required = false, defaultValue = "10") Integer size) {
-        return new ResponseEntity<>(Collections.emptyList(), HttpStatus.OK);
+        return new ResponseEntity<>(userService.getUsers(ids, from, size), HttpStatus.OK);
     }
 
     @PostMapping
     public ResponseEntity<UserDto> addUser(@RequestBody @Valid NewUserRequest newUserRequest) {
-        return new ResponseEntity<>(null, HttpStatus.CREATED);
+        return new ResponseEntity<>(userService.addUser(newUserRequest), HttpStatus.CREATED);
     }
 
     @DeleteMapping("/{userId}")
     public ResponseEntity<Object> deleteUser(@PathVariable Long userId) {
+        userService.deleteUser(userId);
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
 }
