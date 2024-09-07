@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import ru.practicum.DataTransferConvention;
 import ru.practicum.admin.service.UserService;
 import ru.practicum.dto.user.NewUserRequest;
 import ru.practicum.dto.user.UserDto;
@@ -34,8 +35,12 @@ public class UserController {
      */
     @GetMapping
     public ResponseEntity<List<UserDto>> getUsers(@RequestParam Long[] ids,
-                                                  @RequestParam(required = false, defaultValue = "0") Integer from,
-                                                  @RequestParam(required = false, defaultValue = "10") Integer size) {
+                                                  @RequestParam(required = false,
+                                                      defaultValue = DataTransferConvention.FROM)
+                                                  Integer from,
+                                                  @RequestParam(required = false,
+                                                      defaultValue = DataTransferConvention.SIZE)
+                                                  Integer size) {
         return new ResponseEntity<>(userService.getUsers(ids, from, size), HttpStatus.OK);
     }
 
