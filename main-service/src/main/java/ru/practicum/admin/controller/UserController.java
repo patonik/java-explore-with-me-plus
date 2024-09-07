@@ -1,6 +1,7 @@
 package ru.practicum.admin.controller;
 
 import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
@@ -12,6 +13,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import ru.practicum.admin.service.UserService;
 import ru.practicum.dto.user.NewUserRequest;
 import ru.practicum.dto.user.UserDto;
 
@@ -22,7 +24,10 @@ import java.util.List;
 @RestController
 @RequestMapping("/admin/users")
 @Validated
-public class AdminUserController {
+@RequiredArgsConstructor
+public class UserController {
+    private final UserService userService;
+
     /**
      * Возвращает информацию обо всех пользователях (учитываются параметры ограничения выборки),
      * либо о конкретных (учитываются указанные идентификаторы).
@@ -41,7 +46,7 @@ public class AdminUserController {
     }
 
     @DeleteMapping("/{userId}")
-    public ResponseEntity<UserDto> deleteUser(@PathVariable Long userId) {
+    public ResponseEntity<Object> deleteUser(@PathVariable Long userId) {
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
 }

@@ -5,9 +5,10 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import lombok.Data;
+import ru.practicum.admin.controller.UserController;
 
 /**
- * DTO request to {@link ru.practicum.admin.controller.AdminUserController}
+ * DTO request to {@link UserController}
  */
 @Data
 public class NewUserRequest {
