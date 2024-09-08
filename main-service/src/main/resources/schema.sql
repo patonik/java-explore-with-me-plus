@@ -31,7 +31,7 @@ CREATE TABLE IF NOT EXISTS public.EVENTS
     CATEGORY_ID bigint,
     CREATED_ON timestamp without time zone,
     PUBLISHED_ON timestamp without time zone,
-    EVENT_DATE timestamp without time zone,
+    EVENT_DATE timestamp without time zone NOT NULL,
     DESCRIPTION character varying(8192) NOT NULL,
     PAID boolean NOT NULL,
     PARTICIPANT_LIMIT int NOT NULL,

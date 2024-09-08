@@ -13,7 +13,7 @@ import ru.practicum.dto.event.request.ParticipationRequestDto;
 
 @RestController
 @RequestMapping("/users/{userId}/requests")
-public class PrivateRequestController {
+public class RequestController {
     @GetMapping
     public ResponseEntity<ParticipationRequestDto> getMyRequests(@PathVariable Long userId) {
         return new ResponseEntity<>(null, HttpStatus.OK);

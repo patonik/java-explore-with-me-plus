@@ -1,5 +1,7 @@
 package ru.practicum.pub.controller;
 
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -28,7 +30,7 @@ public class PublicCategoryController {
     }
 
     @GetMapping("/{catId}")
-    public ResponseEntity<CategoryDto> getCategory(@PathVariable Long catId) {
+    public ResponseEntity<CategoryDto> getCategory(@PathVariable @Min(1) @NotNull Long catId) {
         return new ResponseEntity<>(publicCategoryService.getCategory(catId), HttpStatus.OK);
     }
 }

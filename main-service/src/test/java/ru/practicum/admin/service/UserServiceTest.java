@@ -8,12 +8,13 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import ru.practicum.admin.repository.UserRepository;
+import ru.practicum.admin.repository.AdminUserRepository;
 import ru.practicum.dto.user.NewUserRequest;
 import ru.practicum.dto.user.NewUserRequestMapper;
 import ru.practicum.dto.user.UserDto;
 import ru.practicum.dto.user.UserDtoMapper;
 import ru.practicum.exception.ConflictException;
+import ru.practicum.exception.NotFoundException;
 import ru.practicum.model.User;
 
 import java.util.Arrays;
@@ -27,7 +28,7 @@ import static org.mockito.Mockito.*;
 class UserServiceTest {
 
     @Mock
-    private UserRepository userRepository;
+    private AdminUserRepository adminUserRepository;
 
     @Mock
     private NewUserRequestMapper newUserRequestMapper;
@@ -57,7 +58,7 @@ class UserServiceTest {
         UserDto user1 = new UserDto(1L, "Alice", "alice@example.com");
         UserDto user2 = new UserDto(2L, "Bob", "bob@example.com");
 
-        when(userRepository.findUserDtosByIds(eq(ids), eq(pageable)))
+        when(adminUserRepository.findUserDtosByIds(eq(ids), eq(pageable)))
             .thenReturn(Arrays.asList(user1, user2));
 
         // Execute service method
@@ -69,7 +70,7 @@ class UserServiceTest {
         assertEquals("Bob", users.get(1).getName());
 
         // Verify repository interaction
-        verify(userRepository, times(1)).findUserDtosByIds(eq(ids), eq(pageable));
+        verify(adminUserRepository, times(1)).findUserDtosByIds(eq(ids), eq(pageable));
     }
 
     @Test
@@ -80,9 +81,9 @@ class UserServiceTest {
         User savedUser = new User(3L, "Charlie", "charlie@example.com");
         UserDto userDto = new UserDto(3L, "Charlie", "charlie@example.com");
 
-        when(userRepository.existsByEmail("charlie@example.com")).thenReturn(false);
+        when(adminUserRepository.existsByEmail("charlie@example.com")).thenReturn(false);
         when(newUserRequestMapper.toUser(newUserRequest)).thenReturn(newUser);
-        when(userRepository.save(newUser)).thenReturn(savedUser);
+        when(adminUserRepository.save(newUser)).thenReturn(savedUser);
         when(userDtoMapper.toUserDto(savedUser)).thenReturn(userDto);
 
         // Execute service method
@@ -94,9 +95,9 @@ class UserServiceTest {
         assertEquals("charlie@example.com", result.getEmail());
 
         // Verify repository and mapper interactions
-        verify(userRepository, times(1)).existsByEmail("charlie@example.com");
+        verify(adminUserRepository, times(1)).existsByEmail("charlie@example.com");
         verify(newUserRequestMapper, times(1)).toUser(newUserRequest);
-        verify(userRepository, times(1)).save(newUser);
+        verify(adminUserRepository, times(1)).save(newUser);
         verify(userDtoMapper, times(1)).toUserDto(savedUser);
     }
 
@@ -105,7 +106,7 @@ class UserServiceTest {
         // Setup test data
         NewUserRequest newUserRequest = new NewUserRequest("Charlie", "charlie@example.com");
 
-        when(userRepository.existsByEmail("charlie@example.com")).thenReturn(true);
+        when(adminUserRepository.existsByEmail("charlie@example.com")).thenReturn(true);
 
         // Execute service method and assert exception
         ConflictException exception = assertThrows(ConflictException.class, () -> userService.addUser(newUserRequest));
@@ -113,8 +114,8 @@ class UserServiceTest {
         assertEquals("Email already exists", exception.getMessage());
 
         // Verify repository interaction
-        verify(userRepository, times(1)).existsByEmail("charlie@example.com");
-        verify(userRepository, never()).save(any(User.class));
+        verify(adminUserRepository, times(1)).existsByEmail("charlie@example.com");
+        verify(adminUserRepository, never()).save(any(User.class));
     }
 
     @Test
@@ -122,14 +123,14 @@ class UserServiceTest {
         // Setup test data
         Long userId = 1L;
 
-        when(userRepository.existsById(userId)).thenReturn(true);
+        when(adminUserRepository.existsById(userId)).thenReturn(true);
 
         // Execute service method
         userService.deleteUser(userId);
 
         // Verify repository interaction
-        verify(userRepository, times(1)).existsById(userId);
-        verify(userRepository, times(1)).deleteById(userId);
+        verify(adminUserRepository, times(1)).existsById(userId);
+        verify(adminUserRepository, times(1)).deleteById(userId);
     }
 
     @Test
@@ -137,15 +138,15 @@ class UserServiceTest {
         // Setup test data
         Long userId = 1L;
 
-        when(userRepository.existsById(userId)).thenReturn(false);
+        when(adminUserRepository.existsById(userId)).thenReturn(false);
 
         // Execute service method and assert exception
-        ConflictException exception = assertThrows(ConflictException.class, () -> userService.deleteUser(userId));
+        NotFoundException exception = assertThrows(NotFoundException.class, () -> userService.deleteUser(userId));
 
         assertEquals("User not found", exception.getMessage());
 
         // Verify repository interaction
-        verify(userRepository, times(1)).existsById(userId);
-        verify(userRepository, never()).deleteById(any(Long.class));
+        verify(adminUserRepository, times(1)).existsById(userId);
+        verify(adminUserRepository, never()).deleteById(any(Long.class));
     }
 }

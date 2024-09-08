@@ -44,7 +44,6 @@ public class Event {
     @ManyToOne(targetEntity = Category.class, fetch = FetchType.LAZY)
     @JoinColumn(name = "CATEGORY_ID", referencedColumnName = "ID")
     private Category category;
-    private Long confirmedRequests;
     @CreationTimestamp
     private LocalDateTime createdOn;
     private LocalDateTime publishedOn;
@@ -91,7 +90,6 @@ public class Event {
         return "Event{" +
             "id=" + id +
             ", annotation='" + annotation + '\'' +
-            ", confirmedRequests=" + confirmedRequests +
             ", createdOn=" + createdOn +
             ", publishedOn=" + publishedOn +
             ", description='" + description + '\'' +
