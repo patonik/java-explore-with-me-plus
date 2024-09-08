@@ -43,6 +43,7 @@ class UserServiceTest {
     void setUp() {
         closeable = MockitoAnnotations.openMocks(this);
     }
+
     @AfterEach
     void tearDown() throws Exception {
         closeable.close();
