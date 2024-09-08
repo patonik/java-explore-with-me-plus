@@ -1,5 +1,5 @@
-# java-explore-with-me
-Template repository for Shareit project.
+# EXTORT WITH ME
+Template repository for java-explore-with-me project.
 
 ## Entity Relationship
 

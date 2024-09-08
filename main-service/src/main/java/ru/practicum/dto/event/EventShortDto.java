@@ -7,6 +7,11 @@ import ru.practicum.dto.user.UserShortDto;
 
 import java.time.LocalDateTime;
 
+/**
+ * DTO response of the {@link ru.practicum.priv.controller.PrivateEventController}
+ * {@link ru.practicum.pub.controller.PublicEventController},
+ * part of {@link ru.practicum.dto.compilation.CompilationDto}
+ */
 @Data
 @Builder
 public class EventShortDto {
