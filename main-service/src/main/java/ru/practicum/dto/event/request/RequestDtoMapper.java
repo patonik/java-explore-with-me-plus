@@ -8,4 +8,6 @@ import ru.practicum.model.Request;
 public interface RequestDtoMapper {
     @Mapping(target = "id", ignore = true)
     Request toRequest(ParticipationRequestDto requestDto);
+
+    ParticipationRequestDto toParticipationRequestDto(Request request);
 }
