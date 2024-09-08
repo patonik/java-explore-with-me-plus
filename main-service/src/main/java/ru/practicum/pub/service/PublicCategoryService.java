@@ -1,4 +1,4 @@
-package ru.practicum.pub.repository;
+package ru.practicum.pub.service;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
@@ -7,6 +7,7 @@ import org.springframework.stereotype.Service;
 import ru.practicum.dto.category.CategoryDto;
 import ru.practicum.exception.NotFoundException;
 import ru.practicum.model.Category;
+import ru.practicum.pub.repository.PublicCategoryRepository;
 
 import java.util.List;
 

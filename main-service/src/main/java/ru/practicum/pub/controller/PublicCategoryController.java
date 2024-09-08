@@ -10,7 +10,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import ru.practicum.DataTransferConvention;
 import ru.practicum.dto.category.CategoryDto;
-import ru.practicum.pub.repository.PublicCategoryService;
+import ru.practicum.pub.service.PublicCategoryService;
 
 import java.util.List;
 
