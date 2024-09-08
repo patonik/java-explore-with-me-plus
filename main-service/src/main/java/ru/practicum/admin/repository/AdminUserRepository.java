@@ -10,7 +10,7 @@ import ru.practicum.model.User;
 import java.util.List;
 
 @Repository
-public interface UserRepository extends JpaRepository<User, Long> {
+public interface AdminUserRepository extends JpaRepository<User, Long> {
     @Query("select new ru.practicum.dto.user.UserDto(u.id, u.name, u.email) from User u where u.id in (:ids)")
     List<UserDto> findUserDtosByIds(Long[] ids, Pageable pageable);
 

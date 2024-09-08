@@ -1,7 +1,12 @@
 package ru.practicum.priv.controller;
 
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotNull;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -10,6 +15,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import ru.practicum.DataTransferConvention;
 import ru.practicum.dto.event.request.EventRequestStatusUpdateRequest;
 import ru.practicum.dto.event.EventFullDto;
 import ru.practicum.dto.event.request.EventRequestStatusUpdateResult;
@@ -17,47 +23,60 @@ import ru.practicum.dto.event.EventShortDto;
 import ru.practicum.dto.event.NewEventDto;
 import ru.practicum.dto.event.request.ParticipationRequestDto;
 import ru.practicum.dto.event.UpdateEventUserRequest;
+import ru.practicum.priv.service.PrivateEventService;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("users/{userId}/events")
+@RequiredArgsConstructor
+@Validated
 public class PrivateEventController {
+    private final PrivateEventService privateEventService;
+
     @GetMapping
-    public ResponseEntity<EventShortDto> getMyEvents(@PathVariable("userId") String userId,
-                                                     @RequestParam(required = false, defaultValue = "0") Integer from,
-                                                     @RequestParam(required = false, defaultValue = "10") Integer size) {
-        return new ResponseEntity<>(null, HttpStatus.OK);
+    public ResponseEntity<List<EventShortDto>> getMyEvents(@PathVariable("userId") @Min(1) @NotNull Long userId,
+                                                           @RequestParam(required = false,
+                                                               defaultValue = DataTransferConvention.FROM)
+                                                           Integer from,
+                                                           @RequestParam(required = false,
+                                                               defaultValue = DataTransferConvention.SIZE)
+                                                           Integer size) {
+        return new ResponseEntity<>(privateEventService.getMyEvents(userId, from, size), HttpStatus.OK);
     }
 
     @PostMapping
-    public ResponseEntity<EventFullDto> addEvent(@PathVariable("userId") String userId,
-                                                 @RequestBody NewEventDto newEventDto) {
-        return new ResponseEntity<>(null, HttpStatus.CREATED);
+    public ResponseEntity<EventFullDto> addEvent(@PathVariable("userId") @Min(1) @NotNull Long userId,
+                                                 @RequestBody @Valid NewEventDto newEventDto) {
+        return new ResponseEntity<>(privateEventService.addEvent(userId, newEventDto), HttpStatus.CREATED);
     }
 
     @GetMapping("/{eventId}")
-    public ResponseEntity<EventFullDto> getMyEvent(@PathVariable Long userId,
-                                                   @PathVariable Long eventId) {
+    public ResponseEntity<EventFullDto> getMyEvent(@PathVariable @Min(1) @NotNull Long userId,
+                                                   @PathVariable @Min(1) @NotNull Long eventId) {
         return new ResponseEntity<>(null, HttpStatus.OK);
     }
 
     @PatchMapping("/{eventId}")
-    public ResponseEntity<EventFullDto> updateMyEvent(@PathVariable Long userId,
-                                                      @PathVariable Long eventId,
-                                                      @RequestBody UpdateEventUserRequest updateEventUserRequest) {
+    public ResponseEntity<EventFullDto> updateMyEvent(@PathVariable @Min(1) @NotNull Long userId,
+                                                      @PathVariable @Min(1) @NotNull Long eventId,
+                                                      @RequestBody @Valid
+                                                      UpdateEventUserRequest updateEventUserRequest) {
         return new ResponseEntity<>(null, HttpStatus.OK);
     }
 
     @GetMapping("/{eventId}/requests")
-    public ResponseEntity<ParticipationRequestDto> getMyEventRequests(@PathVariable Long userId,
-                                                                      @PathVariable Long eventId) {
+    public ResponseEntity<ParticipationRequestDto> getMyEventRequests(@PathVariable @Min(1) @NotNull Long userId,
+                                                                      @PathVariable @Min(1) @NotNull Long eventId) {
         return new ResponseEntity<>(null, HttpStatus.OK);
     }
 
     @PatchMapping("/{eventId}/requests")
-    public ResponseEntity<EventRequestStatusUpdateResult> updateMyEventRequests(@PathVariable Long userId,
-                                                                                @PathVariable Long eventId,
-                                                                                @RequestBody
-                                                                                EventRequestStatusUpdateRequest updateRequest) {
+    public ResponseEntity<EventRequestStatusUpdateResult> updateMyEventRequests(
+        @PathVariable @Min(1) @NotNull Long userId,
+        @PathVariable @Min(1) @NotNull Long eventId,
+        @RequestBody @Valid
+        EventRequestStatusUpdateRequest updateRequest) {
         return new ResponseEntity<>(null, HttpStatus.OK);
     }
 }
