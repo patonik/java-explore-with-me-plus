@@ -7,6 +7,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import ru.practicum.DataTransferConvention;
 import ru.practicum.dto.category.CategoryDto;
 
 import java.util.List;
@@ -16,8 +17,8 @@ import java.util.List;
 public class PublicCategoryController {
     @GetMapping
     public ResponseEntity<List<CategoryDto>> getCategories(
-        @RequestParam(required = false, defaultValue = "0") Integer from,
-        @RequestParam(required = false, defaultValue = "10") Integer size) {
+        @RequestParam(required = false, defaultValue = DataTransferConvention.FROM) Integer from,
+        @RequestParam(required = false, defaultValue = DataTransferConvention.SIZE) Integer size) {
         return new ResponseEntity<>(null, HttpStatus.OK);
     }
 
