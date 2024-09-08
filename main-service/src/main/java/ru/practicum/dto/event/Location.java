@@ -1,6 +1,7 @@
 package ru.practicum.dto.event;
 
 import jakarta.persistence.Embeddable;
+import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -10,6 +11,8 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @Embeddable
 public class Location {
-    private double lat;
-    private double lon;
+    @NotNull
+    private Double lat;
+    @NotNull
+    private Double lon;
 }

@@ -1,13 +1,15 @@
 package ru.practicum.dto.event;
 
 import jakarta.validation.Valid;
-import jakarta.validation.constraints.Future;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
+import ru.practicum.validation.LaterThan;
 
 import java.time.LocalDateTime;
 
@@ -16,17 +18,19 @@ import java.time.LocalDateTime;
  */
 @Data
 @Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class NewEventDto {
     @NotBlank
     @Size(min = 20, max = 2000)
     private String annotation;
     @NotNull
     @Min(1)
-    private Long category;
+    private Long categoryId;
     @NotBlank
     @Size(min = 20, max = 7000)
     private String description;
-    @Future
+    @LaterThan(2)
     @NotNull
     private LocalDateTime eventDate;
     @Valid

@@ -1,8 +1,18 @@
 package ru.practicum.model;
 
-import jakarta.persistence.*;
-import lombok.*;
-import lombok.experimental.FieldDefaults;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+import org.hibernate.annotations.CreationTimestamp;
 import ru.practicum.dto.event.request.Status;
 
 import java.time.LocalDateTime;
@@ -11,31 +21,19 @@ import java.time.LocalDateTime;
 @Table(name = "requests")
 @Getter
 @Setter
-@ToString
-@FieldDefaults(level = AccessLevel.PRIVATE)
-@EqualsAndHashCode(of = "id")
 @NoArgsConstructor
 @AllArgsConstructor
 public class Request {
     @Id
-    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "REQUEST_ID_SEQ")
-    @SequenceGenerator(name = "REQUEST_ID_SEQ", sequenceName = "REQUEST_ID_SEQ", allocationSize = 1)
-    Long id;
-
-    @ManyToOne(targetEntity = Event.class, fetch = FetchType.LAZY)
-    @JoinColumn(name = "EVENT_ID", referencedColumnName = "ID", foreignKey = @ForeignKey(name = "FK_REQUEST_EVENT"))
-    Event event;
-
-    @ManyToOne(targetEntity = User.class, fetch = FetchType.LAZY)
-    @JoinColumn(name = "REQUESTER_ID",
-            referencedColumnName = "ID",
-            foreignKey = @ForeignKey(name = "FK_REQUEST_REQUESTER"))
-    User requester;
-
-    @Column(name = "REQUEST_STATUS", nullable = false)
+    private Long id;
+    @CreationTimestamp
+    private LocalDateTime created;
+    @ManyToOne(fetch = FetchType.LAZY, targetEntity = User.class)
+    @JoinColumn(name = "USER_ID", referencedColumnName = "ID", nullable = false)
+    private User requester;
+    @ManyToOne(fetch = FetchType.LAZY, targetEntity = Event.class)
+    @JoinColumn(name = "EVENT_ID", referencedColumnName = "ID", nullable = false)
+    private Event event;
     @Enumerated(EnumType.STRING)
-    Status status;
-
-    @Column(name = "CREATED", nullable = false)
-    LocalDateTime created;
+    private Status status;
 }

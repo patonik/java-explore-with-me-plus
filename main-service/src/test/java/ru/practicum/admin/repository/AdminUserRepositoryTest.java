@@ -19,8 +19,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 @DataJpaTest
 @ActiveProfiles("test")
 @RequiredArgsConstructor(onConstructor = @__(@Autowired))
-class UserRepositoryTest {
-    private final UserRepository userRepository;
+class AdminUserRepositoryTest {
+    private final AdminUserRepository adminUserRepository;
 
     @BeforeEach
     void setUp() {
@@ -29,14 +29,14 @@ class UserRepositoryTest {
         User user2 = new User(null, "Bob", "bob@example.com");
         User user3 = new User(null, "Charlie", "charlie@example.com");
 
-        userRepository.save(user1);
-        userRepository.save(user2);
-        userRepository.save(user3);
+        adminUserRepository.save(user1);
+        adminUserRepository.save(user2);
+        adminUserRepository.save(user3);
     }
 
     @Test
     void testFindUserDtosByIds() {
-        List<User> all = userRepository.findAll();
+        List<User> all = adminUserRepository.findAll();
         User first = all.getFirst();
         User last = all.getLast();
         Long[] ids = {first.getId(), last.getId()};
@@ -45,9 +45,9 @@ class UserRepositoryTest {
         Pageable pageable3 = PageRequest.of(2, 1);
 
         // Act
-        List<UserDto> userDtos = userRepository.findUserDtosByIds(ids, pageable);
-        List<UserDto> userDtos2 = userRepository.findUserDtosByIds(ids, pageable2);
-        List<UserDto> userDtos3 = userRepository.findUserDtosByIds(ids, pageable3);
+        List<UserDto> userDtos = adminUserRepository.findUserDtosByIds(ids, pageable);
+        List<UserDto> userDtos2 = adminUserRepository.findUserDtosByIds(ids, pageable2);
+        List<UserDto> userDtos3 = adminUserRepository.findUserDtosByIds(ids, pageable3);
 
         // Assert
         assertThat(userDtos).hasSize(1);
@@ -60,20 +60,20 @@ class UserRepositoryTest {
     @Test
     void testExistsByEmail() {
         // Check if a user exists with a specific email
-        Boolean exists = userRepository.existsByEmail("alice@example.com");
+        Boolean exists = adminUserRepository.existsByEmail("alice@example.com");
 
         // Assert
         assertThat(exists).isTrue();
 
         // Check if a user does not exist
-        Boolean notExists = userRepository.existsByEmail("nonexistent@example.com");
+        Boolean notExists = adminUserRepository.existsByEmail("nonexistent@example.com");
         assertThat(notExists).isFalse();
     }
 
     @Test
     void testFindById() {
         // Act
-        Optional<User> user = userRepository.findById(1L);
+        Optional<User> user = adminUserRepository.findById(1L);
 
         // Assert
         assertThat(user).isPresent();
