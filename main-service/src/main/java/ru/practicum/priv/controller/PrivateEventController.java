@@ -62,13 +62,15 @@ public class PrivateEventController {
                                                       @PathVariable @Min(1) @NotNull Long eventId,
                                                       @RequestBody @Valid
                                                       UpdateEventUserRequest updateEventUserRequest) {
-        return new ResponseEntity<>(null, HttpStatus.OK);
+        return new ResponseEntity<>(privateEventService.updateMyEvent(userId, eventId, updateEventUserRequest),
+            HttpStatus.OK);
     }
 
     @GetMapping("/{eventId}/requests")
-    public ResponseEntity<ParticipationRequestDto> getMyEventRequests(@PathVariable @Min(1) @NotNull Long userId,
-                                                                      @PathVariable @Min(1) @NotNull Long eventId) {
-        return new ResponseEntity<>(null, HttpStatus.OK);
+    public ResponseEntity<List<ParticipationRequestDto>> getMyEventRequests(@PathVariable @Min(1) @NotNull Long userId,
+                                                                            @PathVariable @Min(1) @NotNull
+                                                                            Long eventId) {
+        return new ResponseEntity<>(privateEventService.getMyEventRequests(userId, eventId), HttpStatus.OK);
     }
 
     @PatchMapping("/{eventId}/requests")
@@ -77,6 +79,7 @@ public class PrivateEventController {
         @PathVariable @Min(1) @NotNull Long eventId,
         @RequestBody @Valid
         EventRequestStatusUpdateRequest updateRequest) {
-        return new ResponseEntity<>(null, HttpStatus.OK);
+        return new ResponseEntity<>(privateEventService.updateMyEventRequests(userId, eventId, updateRequest),
+            HttpStatus.OK);
     }
 }

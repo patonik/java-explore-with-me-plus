@@ -1,11 +1,11 @@
 package ru.practicum.dto.event;
 
 import jakarta.validation.Valid;
-import jakarta.validation.constraints.Future;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.Size;
 import lombok.Builder;
 import lombok.Data;
+import ru.practicum.validation.LaterThan;
 
 import java.time.LocalDateTime;
 
@@ -18,7 +18,7 @@ public class UpdateEventUserRequest {
     private Long category;
     @Size(min = 20, max = 7000)
     private String description;
-    @Future
+    @LaterThan
     private LocalDateTime eventDate;
     @Valid
     private Location location;

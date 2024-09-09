@@ -14,7 +14,13 @@ import ru.practicum.dto.event.EventShortDtoMapper;
 import ru.practicum.dto.event.NewEventDto;
 import ru.practicum.dto.event.NewEventDtoMapper;
 import ru.practicum.dto.event.State;
+import ru.practicum.dto.event.UpdateEventUserRequest;
+import ru.practicum.dto.event.UpdateEventUserRequestMapper;
+import ru.practicum.dto.event.request.EventRequestStatusUpdateRequest;
+import ru.practicum.dto.event.request.EventRequestStatusUpdateResult;
+import ru.practicum.dto.event.request.ParticipationRequestDto;
 import ru.practicum.dto.event.request.Status;
+import ru.practicum.exception.ConflictException;
 import ru.practicum.exception.NotFoundException;
 import ru.practicum.model.Category;
 import ru.practicum.model.Event;
@@ -22,6 +28,7 @@ import ru.practicum.model.User;
 import ru.practicum.priv.repository.PrivateCategoryRepository;
 import ru.practicum.priv.repository.PrivateEventRepository;
 import ru.practicum.priv.repository.PrivateUserRepository;
+import ru.practicum.priv.repository.RequestRepository;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -34,9 +41,11 @@ public class PrivateEventService {
     private final PrivateEventRepository privateEventRepository;
     private final PrivateUserRepository privateUserRepository;
     private final PrivateCategoryRepository privateCategoryRepository;
+    private final RequestRepository requestRepository;
     private final NewEventDtoMapper newEventDtoMapper;
     private final EventFullDtoMapper eventFullDtoMapper;
     private final EventShortDtoMapper eventShortDtoMapper;
+    private final UpdateEventUserRequestMapper updateEventUserRequestMapper;
     private final HttpStatsClient httpStatsClient;
 
     @Transactional
@@ -82,7 +91,35 @@ public class PrivateEventService {
         return eventFullDtoMapper.toDto(event, confirmedRequests);
     }
 
+    @Transactional
+    public EventFullDto updateMyEvent(Long userId, Long eventId, UpdateEventUserRequest updateEventUserRequest) {
+        Event event =
+            privateEventRepository.findByIdAndInitiatorId(eventId, userId)
+                .orElseThrow(() -> new NotFoundException("Event not found: " + eventId));
+        if (event.getState().equals(State.PUBLISHED)) {
+            throw new ConflictException("You can't update a new event: " + eventId);
+        }
+        event = updateEventUserRequestMapper.updateEvent(updateEventUserRequest, event);
+        event = privateEventRepository.save(event);
+        Long confirmedRequests =
+            privateEventRepository.getRequestCountByEventAndStatus(eventId, Status.CONFIRMED).getConfirmedRequests();
+        return eventFullDtoMapper.toDto(event, confirmedRequests);
+    }
 
+    public List<ParticipationRequestDto> getMyEventRequests(Long userId, Long eventId) {
+        Event event =
+            privateEventRepository.findByIdAndInitiatorId(eventId, userId)
+                .orElseThrow(() -> new NotFoundException("Event not found: " + eventId));
+        return requestRepository.findByEventId(eventId);
+    }
+
+    public EventRequestStatusUpdateResult updateMyEventRequests(Long userId, Long eventId,
+                                                                EventRequestStatusUpdateRequest updateRequest) {
+        Event event =
+            privateEventRepository.findByIdAndInitiatorId(eventId, userId)
+                .orElseThrow(() -> new NotFoundException("Event not found: " + eventId));
+        return null;
+    }
 
     private static Params getParams(List<Event> eventList) {
         String start = String.valueOf(eventList.getFirst().getCreatedOn());
