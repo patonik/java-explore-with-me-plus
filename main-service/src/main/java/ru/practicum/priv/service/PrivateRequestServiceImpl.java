@@ -10,9 +10,9 @@ import ru.practicum.dto.event.request.Status;
 import ru.practicum.exception.ConflictException;
 import ru.practicum.exception.NotFoundException;
 import ru.practicum.model.Request;
+import ru.practicum.priv.repository.PrivateEventRepository;
 import ru.practicum.priv.repository.PrivateUserRepository;
 import ru.practicum.priv.repository.RequestRepository;
-import ru.practicum.pub.repository.PublicEventRepository;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -22,7 +22,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class PrivateRequestServiceImpl implements PrivateRequestService {
     private final RequestRepository requestRepository;
-    private final PublicEventRepository eventRepository;
+    private final PrivateEventRepository eventRepository;
     private final PrivateUserRepository userRepository;
     private final RequestDtoMapper requestMapper;
 
