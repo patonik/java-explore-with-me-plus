@@ -72,7 +72,7 @@ public class PrivateRequestServiceImpl implements PrivateRequestService {
     public ParticipationRequestDto cancelMyRequest(Long userId, Long requestId) {
         var request = requestRepository.findByIdAndRequesterId(requestId, userId).orElseThrow(
                 () -> new NotFoundException(String.format("request with id %s", requestId)));
-        request.setStatus(Status.REJECTED);
+        request.setStatus(Status.PENDING);
         return requestMapper.toParticipationRequestDto(request);
     }
 }
