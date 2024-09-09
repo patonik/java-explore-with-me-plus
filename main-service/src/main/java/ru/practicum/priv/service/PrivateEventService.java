@@ -96,10 +96,13 @@ public class PrivateEventService {
         Event event =
             privateEventRepository.findByIdAndInitiatorId(eventId, userId)
                 .orElseThrow(() -> new NotFoundException("Event not found: " + eventId));
+        Long categoryId = updateEventUserRequest.getCategoryId();
+        Category category = privateCategoryRepository.findById(categoryId)
+            .orElseThrow(() -> new NotFoundException("Category not found: " + categoryId));
         if (event.getState().equals(State.PUBLISHED)) {
             throw new ConflictException("You can't update a new event: " + eventId);
         }
-        event = updateEventUserRequestMapper.updateEvent(updateEventUserRequest, event);
+        event = updateEventUserRequestMapper.updateEvent(updateEventUserRequest, event, category);
         event = privateEventRepository.save(event);
         Long confirmedRequests =
             privateEventRepository.getRequestCountByEventAndStatus(eventId, Status.CONFIRMED).getConfirmedRequests();
