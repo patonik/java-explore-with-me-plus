@@ -20,6 +20,9 @@ public class RequestController {
 
     @GetMapping
     public ResponseEntity<List<ParticipationRequestDto>> getMyRequests(@PathVariable Long userId) {
+        log.atInfo()
+                .addArgument(userId)
+                .log("Received request to get participation requests for userId: {}");
         return new ResponseEntity<>(requestService.getMyRequests(userId), HttpStatus.OK);
     }
 
@@ -35,6 +38,10 @@ public class RequestController {
     @PatchMapping("/{requestId}/cancel")
     public ResponseEntity<ParticipationRequestDto> cancelMyRequest(@PathVariable Long userId,
                                                                    @PathVariable Long requestId) {
+        log.atInfo()
+                .addArgument(userId)
+                .addArgument(requestId)
+                .log("Received request to cancel participation request with userId: {} and requestId: {}");
         return new ResponseEntity<>(requestService.cancelMyRequest(userId, requestId), HttpStatus.OK);
     }
 }

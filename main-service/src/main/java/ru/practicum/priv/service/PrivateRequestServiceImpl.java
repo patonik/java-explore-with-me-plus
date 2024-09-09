@@ -3,13 +3,15 @@ package ru.practicum.priv.service;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import ru.practicum.dto.event.State;
 import ru.practicum.dto.event.request.ParticipationRequestDto;
 import ru.practicum.dto.event.request.RequestDtoMapper;
 import ru.practicum.dto.event.request.Status;
+import ru.practicum.exception.ConflictException;
 import ru.practicum.exception.NotFoundException;
 import ru.practicum.model.Request;
-import ru.practicum.priv.repository.PrivateRequestRepository;
 import ru.practicum.priv.repository.PrivateUserRepository;
+import ru.practicum.priv.repository.RequestRepository;
 import ru.practicum.pub.repository.PublicEventRepository;
 
 import java.time.LocalDateTime;
@@ -19,7 +21,7 @@ import java.util.List;
 @Transactional
 @RequiredArgsConstructor
 public class PrivateRequestServiceImpl implements PrivateRequestService {
-    private final PrivateRequestRepository requestRepository;
+    private final RequestRepository requestRepository;
     private final PublicEventRepository eventRepository;
     private final PrivateUserRepository userRepository;
     private final RequestDtoMapper requestMapper;
@@ -32,10 +34,31 @@ public class PrivateRequestServiceImpl implements PrivateRequestService {
 
     @Override
     public ParticipationRequestDto addMyRequest(Long userId, Long eventId) {
-        var user = userRepository.findById(userId).orElseThrow(
-                () -> new NotFoundException(String.format("user with id %s", userId)));
-        var event = eventRepository.findById(eventId).orElseThrow(
-                () -> new NotFoundException(String.format("event with id %s", eventId)));
+        var optUser = userRepository.findById(userId);
+        var optEvent = eventRepository.findById(eventId);
+
+        if (optUser.isEmpty()) {
+            throw new NotFoundException(String.format("user with id %s", userId));
+        }
+        if (optEvent.isEmpty()) {
+            throw new NotFoundException(String.format("event with id %s", eventId));
+        }
+        if (requestRepository.findByRequesterIdAndEventId(userId, eventId).isPresent()) {
+            throw new ConflictException("request already exists");
+        }
+        if (!eventRepository.findByIdAndInitiatorId(eventId, userId).isEmpty()) {
+            throw new ConflictException("""
+                    the initiator of the event cannot add a participation request for their own event.
+                    """);
+        }
+
+        var user = optUser.get();
+        var event = optEvent.get();
+
+        if (!event.getState().equals(State.PUBLISHED)) {
+            throw new ConflictException("cannot participate in an unpublished event.");
+        }
+
         var request = new Request(null, LocalDateTime.now(), user, event, Status.PENDING);
 
         return requestMapper.toParticipationRequestDto(requestRepository.save(request));
