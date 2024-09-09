@@ -9,6 +9,7 @@ import ru.practicum.dto.event.request.Status;
 import ru.practicum.model.Event;
 
 import java.util.List;
+import java.util.Optional;
 
 
 @Repository
@@ -21,4 +22,6 @@ public interface PrivateEventRepository extends JpaRepository<Event, Long> {
     RequestCount getRequestCountByEventAndStatus(Long eventId, Status status);
 
     List<Event> findAllByInitiatorIdOrderByCreatedOnAsc(Long userId, Pageable pageable);
+
+    Optional<Event> findByIdAndInitiatorId(Long id, Long initiatorId);
 }

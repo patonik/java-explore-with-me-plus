@@ -15,6 +15,7 @@ import ru.practicum.dto.event.NewEventDto;
 import ru.practicum.dto.event.NewEventDtoMapper;
 import ru.practicum.dto.event.State;
 import ru.practicum.dto.event.request.Status;
+import ru.practicum.exception.NotFoundException;
 import ru.practicum.model.Category;
 import ru.practicum.model.Event;
 import ru.practicum.model.User;
@@ -47,9 +48,7 @@ public class PrivateEventService {
             .orElseThrow(() -> new RuntimeException("No such category"));
         Event event = newEventDtoMapper.toEvent(newEventDto, initiator, category, State.PENDING);
         event = privateEventRepository.save(event);
-        Long confirmedRequests =
-            privateEventRepository.getRequestCountByEventAndStatus(event.getId(), Status.CONFIRMED)
-                .getConfirmedRequests();
+        Long confirmedRequests = 0L;
         return eventFullDtoMapper.toDto(event, confirmedRequests);
     }
 
@@ -72,6 +71,18 @@ public class PrivateEventService {
         }
         return eventShortDtos;
     }
+
+    @Transactional(readOnly = true)
+    public EventFullDto getMyEvent(Long userId, Long eventId) {
+        Event event =
+            privateEventRepository.findByIdAndInitiatorId(eventId, userId)
+                .orElseThrow(() -> new NotFoundException("Event not found: " + eventId));
+        Long confirmedRequests =
+            privateEventRepository.getRequestCountByEventAndStatus(eventId, Status.CONFIRMED).getConfirmedRequests();
+        return eventFullDtoMapper.toDto(event, confirmedRequests);
+    }
+
+
 
     private static Params getParams(List<Event> eventList) {
         String start = String.valueOf(eventList.getFirst().getCreatedOn());

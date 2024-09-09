@@ -54,7 +54,7 @@ public class PrivateEventController {
     @GetMapping("/{eventId}")
     public ResponseEntity<EventFullDto> getMyEvent(@PathVariable @Min(1) @NotNull Long userId,
                                                    @PathVariable @Min(1) @NotNull Long eventId) {
-        return new ResponseEntity<>(null, HttpStatus.OK);
+        return new ResponseEntity<>(privateEventService.getMyEvent(userId, eventId), HttpStatus.OK);
     }
 
     @PatchMapping("/{eventId}")
