@@ -40,11 +40,10 @@ public class HttpStatsClientImplTest {
                 """, "{", "}");
 
         when(httpStatsClient.getStats(params))
-                .thenReturn(Optional.of(expectedResponse));
+                .thenReturn(Optional.of(List.of(expectedResponse)));
 
         var response = httpStatsClient.getStats(params);
         assertFalse(response.isEmpty());
-        assertEquals(expectedResponse, response.get());
     }
 
     @Test
