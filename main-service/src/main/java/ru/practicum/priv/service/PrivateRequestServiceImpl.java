@@ -46,7 +46,7 @@ public class PrivateRequestServiceImpl implements PrivateRequestService {
         if (requestRepository.findByRequesterIdAndEventId(userId, eventId).isPresent()) {
             throw new ConflictException("request already exists");
         }
-        if (!eventRepository.findByIdAndInitiatorId(eventId, userId).isEmpty()) {
+        if (eventRepository.findByIdAndInitiatorId(eventId, userId).isEmpty()) {
             throw new ConflictException("""
                     the initiator of the event cannot add a participation request for their own event.
                     """);
