@@ -19,11 +19,13 @@ import ru.practicum.dto.event.UpdateEventUserRequestMapper;
 import ru.practicum.dto.event.request.EventRequestStatusUpdateRequest;
 import ru.practicum.dto.event.request.EventRequestStatusUpdateResult;
 import ru.practicum.dto.event.request.ParticipationRequestDto;
+import ru.practicum.dto.event.request.RequestDtoMapper;
 import ru.practicum.dto.event.request.Status;
 import ru.practicum.exception.ConflictException;
 import ru.practicum.exception.NotFoundException;
 import ru.practicum.model.Category;
 import ru.practicum.model.Event;
+import ru.practicum.model.Request;
 import ru.practicum.model.User;
 import ru.practicum.priv.repository.PrivateCategoryRepository;
 import ru.practicum.priv.repository.PrivateEventRepository;
@@ -33,7 +35,12 @@ import ru.practicum.priv.repository.RequestRepository;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -47,6 +54,7 @@ public class PrivateEventService {
     private final EventShortDtoMapper eventShortDtoMapper;
     private final UpdateEventUserRequestMapper updateEventUserRequestMapper;
     private final HttpStatsClient httpStatsClient;
+    private final RequestDtoMapper requestDtoMapper;
 
     @Transactional
     public EventFullDto addEvent(Long userId, NewEventDto newEventDto) {
@@ -113,16 +121,83 @@ public class PrivateEventService {
         Event event =
             privateEventRepository.findByIdAndInitiatorId(eventId, userId)
                 .orElseThrow(() -> new NotFoundException("Event not found: " + eventId));
-        return requestRepository.findByEventId(eventId);
+        return requestRepository.findDtosByEventId(eventId);
     }
 
+    /**
+     * Обратите внимание:
+     * <ul>
+     * <li>если для события лимит заявок равен 0 или отключена пре-модерация заявок, то подтверждение заявок не требуется</li>
+     * <li>нельзя подтвердить заявку, если уже достигнут лимит по заявкам на данное событие (Ожидается код ошибки 409)</li>
+     * <li>статус можно изменить только у заявок, находящихся в состоянии ожидания (Ожидается код ошибки 409)</li>
+     * <li>если при подтверждении данной заявки, лимит заявок для события исчерпан, то все неподтверждённые заявки необходимо отклонить</li>
+     * </ul>
+     */
+
+    @Transactional
     public EventRequestStatusUpdateResult updateMyEventRequests(Long userId, Long eventId,
                                                                 EventRequestStatusUpdateRequest updateRequest) {
         Event event =
             privateEventRepository.findByIdAndInitiatorId(eventId, userId)
                 .orElseThrow(() -> new NotFoundException("Event not found: " + eventId));
-        return null;
+
+
+        return verifyAndUpdate(updateRequest.getRequestIds(),
+            updateRequest.getStatus(), event);
     }
+
+    private EventRequestStatusUpdateResult verifyAndUpdate(Set<Long> updateRequestIds,
+                                                           Status updateRequestStatus,
+                                                           Event event) {
+        Long eventId = event.getId();
+        List<Request> allRequests = requestRepository.findAllByEventId(eventId);
+        Map<Status, Map<Long, Request>> statusSetMap = allRequests.stream()
+            .collect(Collectors.groupingBy(Request::getStatus, Collectors.toMap(Request::getId, Function.identity())));
+        Integer participantLimit = event.getParticipantLimit();
+        if (participantLimit.equals(0) || event.getRequestModeration().equals(false)) {
+            return new EventRequestStatusUpdateResult();
+        }
+        Map<Long, Request> pendingRequests = statusSetMap.get(Status.PENDING);
+        Set<Long> pendingRequestIds = pendingRequests.keySet();
+        if (pendingRequestIds.isEmpty()) {
+            throw new ConflictException("No pending requests for: " + eventId);
+        }
+        if (!pendingRequestIds.containsAll(updateRequestIds)) {
+            throw new ConflictException("Cannot update, status not pending: " + eventId);
+        }
+        Set<ParticipationRequestDto> confirmed;
+        Set<ParticipationRequestDto> rejected;
+        switch (updateRequestStatus) {
+            case CONFIRMED:
+                Set<Long> confirmedRequests = statusSetMap.get(Status.CONFIRMED).keySet();
+                int confirmedSize = confirmedRequests.size();
+                int total = updateRequestIds.size() + confirmedSize;
+                if (total > participantLimit) {
+                    throw new ConflictException("Requests limit exceeded");
+                }
+                requestRepository.updateAllByIds(updateRequestIds, updateRequestStatus);
+                Map<Long, Request> confirmedCopy = new HashMap<>(pendingRequests);
+                confirmedCopy.keySet().retainAll(updateRequestIds);
+                confirmed =
+                    requestDtoMapper.toParticipationRequestDtos(confirmedCopy.values());
+                rejected = Set.of();
+                if (total == participantLimit) {
+                    pendingRequestIds.removeAll(updateRequestIds);
+                    requestRepository.updateAllByIds(pendingRequestIds, Status.REJECTED);
+                    rejected = requestDtoMapper.toParticipationRequestDtos(pendingRequests.values());
+                }
+                return new EventRequestStatusUpdateResult(confirmed, rejected);
+            case REJECTED:
+                requestRepository.updateAllByIds(updateRequestIds, updateRequestStatus);
+                rejected =
+                    requestDtoMapper.toParticipationRequestDtos(pendingRequests.values());
+                confirmed = Set.of();
+                return new EventRequestStatusUpdateResult(confirmed, rejected);
+            case null, default:
+                throw new ConflictException("Incorrect update request status: " + updateRequestStatus);
+        }
+    }
+
 
     private static Params getParams(List<Event> eventList) {
         String start = String.valueOf(eventList.getFirst().getCreatedOn());

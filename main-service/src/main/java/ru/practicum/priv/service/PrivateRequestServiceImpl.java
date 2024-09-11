@@ -29,7 +29,7 @@ public class PrivateRequestServiceImpl implements PrivateRequestService {
     @Override
     @Transactional(readOnly = true)
     public List<ParticipationRequestDto> getMyRequests(Long userId) {
-        return requestRepository.findByRequesterId(userId);
+        return requestRepository.findDtosByRequesterId(userId);
     }
 
     @Override
