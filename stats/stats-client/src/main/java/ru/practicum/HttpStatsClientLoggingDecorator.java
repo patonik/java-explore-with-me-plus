@@ -3,6 +3,7 @@ package ru.practicum;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.client.RestClientException;
 
+import java.util.List;
 import java.util.Optional;
 
 @Slf4j
@@ -15,7 +16,7 @@ public class HttpStatsClientLoggingDecorator implements HttpStatsClient {
     }
 
     @Override
-    public <R> Optional<R> getStats(StatsParameters<R> params) {
+    public <R> Optional<List<R>> getStats(StatsParameters<R> params) {
         log.info("Getting stats: {}", params.toString());
         try {
             var optResult = delegate.getStats(params);

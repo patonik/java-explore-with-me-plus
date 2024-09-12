@@ -20,5 +20,5 @@ public class StatsParameters<R> {
     String end;
     List<String> uris;
     boolean unique;
-    Class<R> responseType;
+    Class<R[]> responseType;
 }

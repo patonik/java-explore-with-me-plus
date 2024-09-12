@@ -46,7 +46,7 @@ public class PrivateRequestServiceImpl implements PrivateRequestService {
         if (requestRepository.findByRequesterIdAndEventId(userId, eventId).isPresent()) {
             throw new ConflictException("request already exists");
         }
-        if (!eventRepository.findByIdAndInitiatorId(eventId, userId).isEmpty()) {
+        if (eventRepository.findByIdAndInitiatorId(eventId, userId).isEmpty()) {
             throw new ConflictException("""
                     the initiator of the event cannot add a participation request for their own event.
                     """);
@@ -58,8 +58,12 @@ public class PrivateRequestServiceImpl implements PrivateRequestService {
         if (!event.getState().equals(State.PUBLISHED)) {
             throw new ConflictException("cannot participate in an unpublished event.");
         }
+        if (event.getParticipantLimit().equals(requestRepository.countByEventId(eventId))) {
+            throw new ConflictException("The participant limit for this event has been reached.");
+        }
 
-        var request = new Request(null, LocalDateTime.now(), user, event, Status.PENDING);
+        var requestStatus = event.getRequestModeration() ? Status.PENDING : Status.CONFIRMED;
+        var request = new Request(null, LocalDateTime.now(), user, event, requestStatus);
 
         return requestMapper.toParticipationRequestDto(requestRepository.save(request));
     }
@@ -68,7 +72,7 @@ public class PrivateRequestServiceImpl implements PrivateRequestService {
     public ParticipationRequestDto cancelMyRequest(Long userId, Long requestId) {
         var request = requestRepository.findByIdAndRequesterId(requestId, userId).orElseThrow(
                 () -> new NotFoundException(String.format("request with id %s", requestId)));
-        request.setStatus(Status.REJECTED);
+        request.setStatus(Status.PENDING);
         return requestMapper.toParticipationRequestDto(request);
     }
 }
