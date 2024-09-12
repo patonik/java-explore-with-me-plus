@@ -24,4 +24,6 @@ public interface PrivateEventRepository extends JpaRepository<Event, Long> {
     List<Event> findAllByInitiatorIdOrderByCreatedOnAsc(Long userId, Pageable pageable);
 
     Optional<Event> findByIdAndInitiatorId(Long id, Long initiatorId);
+
+    boolean existsByIdAndInitiatorId(Long id, Long initiatorId);
 }

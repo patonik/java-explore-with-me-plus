@@ -34,6 +34,7 @@ import ru.practicum.priv.repository.RequestRepository;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
@@ -118,9 +119,11 @@ public class PrivateEventService {
     }
 
     public List<ParticipationRequestDto> getMyEventRequests(Long userId, Long eventId) {
-        Event event =
-            privateEventRepository.findByIdAndInitiatorId(eventId, userId)
-                .orElseThrow(() -> new NotFoundException("Event not found: " + eventId));
+        boolean exists =
+            privateEventRepository.existsByIdAndInitiatorId(eventId, userId);
+        if (!exists) {
+            throw new NotFoundException("Event not found: " + eventId);
+        }
         return requestRepository.findDtosByEventId(eventId);
     }
 
@@ -178,19 +181,25 @@ public class PrivateEventService {
                 requestRepository.updateAllByIds(updateRequestIds, updateRequestStatus);
                 Map<Long, Request> confirmedCopy = new HashMap<>(pendingRequests);
                 confirmedCopy.keySet().retainAll(updateRequestIds);
+                Collection<Request> confirmedValues = confirmedCopy.values();
+                confirmedValues.forEach(x -> x.setStatus(Status.CONFIRMED));
                 confirmed =
-                    requestDtoMapper.toParticipationRequestDtos(confirmedCopy.values());
+                    requestDtoMapper.toParticipationRequestDtos(confirmedValues);
                 rejected = Set.of();
                 if (total == participantLimit) {
                     pendingRequestIds.removeAll(updateRequestIds);
                     requestRepository.updateAllByIds(pendingRequestIds, Status.REJECTED);
-                    rejected = requestDtoMapper.toParticipationRequestDtos(pendingRequests.values());
+                    Collection<Request> pendingValues = pendingRequests.values();
+                    pendingValues.forEach(x -> x.setStatus(Status.REJECTED));
+                    rejected = requestDtoMapper.toParticipationRequestDtos(pendingValues);
                 }
                 return new EventRequestStatusUpdateResult(confirmed, rejected);
             case REJECTED:
                 requestRepository.updateAllByIds(updateRequestIds, updateRequestStatus);
+                Collection<Request> pendingValues = pendingRequests.values();
+                pendingValues.forEach(x -> x.setStatus(Status.REJECTED));
                 rejected =
-                    requestDtoMapper.toParticipationRequestDtos(pendingRequests.values());
+                    requestDtoMapper.toParticipationRequestDtos(pendingValues);
                 confirmed = Set.of();
                 return new EventRequestStatusUpdateResult(confirmed, rejected);
             case null, default:
