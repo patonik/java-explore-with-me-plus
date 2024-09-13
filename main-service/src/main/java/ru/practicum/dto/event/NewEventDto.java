@@ -1,5 +1,7 @@
 package ru.practicum.dto.event;
 
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
@@ -9,6 +11,8 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import ru.practicum.json.LocalDateTimeDeserializer;
+import ru.practicum.json.LocalDateTimeSerializer;
 import ru.practicum.validation.LaterThan;
 
 import java.time.LocalDateTime;
@@ -32,6 +36,8 @@ public class NewEventDto {
     private String description;
     @LaterThan(2)
     @NotNull
+    @JsonSerialize(using = LocalDateTimeSerializer.class)
+    @JsonDeserialize(using = LocalDateTimeDeserializer.class)
     private LocalDateTime eventDate;
     @Valid
     @NotNull

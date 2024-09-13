@@ -4,8 +4,12 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.util.MultiValueMap;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -32,7 +36,9 @@ import java.util.List;
 @RequiredArgsConstructor
 @Validated
 public class PrivateEventController {
+    private static final Logger log = LoggerFactory.getLogger(PrivateEventController.class);
     private final PrivateEventService privateEventService;
+    private final MultiValueMap<String, String> headers = new HttpHeaders();
 
     @GetMapping
     public ResponseEntity<List<EventShortDto>> getMyEvents(@PathVariable("userId") @Min(1) @NotNull Long userId,
@@ -42,19 +48,23 @@ public class PrivateEventController {
                                                            @RequestParam(required = false,
                                                                defaultValue = DataTransferConvention.SIZE)
                                                            Integer size) {
-        return new ResponseEntity<>(privateEventService.getMyEvents(userId, from, size), HttpStatus.OK);
+        headers.set(HttpHeaders.CONTENT_TYPE, "application/json");
+        return new ResponseEntity<>(privateEventService.getMyEvents(userId, from, size), headers, HttpStatus.OK);
     }
 
     @PostMapping
     public ResponseEntity<EventFullDto> addEvent(@PathVariable("userId") @Min(1) @NotNull Long userId,
                                                  @RequestBody @Valid NewEventDto newEventDto) {
-        return new ResponseEntity<>(privateEventService.addEvent(userId, newEventDto), HttpStatus.CREATED);
+        headers.set(HttpHeaders.CONTENT_TYPE, "application/json");
+        log.info("Adding new event: {}", newEventDto);
+        return new ResponseEntity<>(privateEventService.addEvent(userId, newEventDto), headers, HttpStatus.CREATED);
     }
 
     @GetMapping("/{eventId}")
     public ResponseEntity<EventFullDto> getMyEvent(@PathVariable @Min(1) @NotNull Long userId,
                                                    @PathVariable @Min(1) @NotNull Long eventId) {
-        return new ResponseEntity<>(privateEventService.getMyEvent(userId, eventId), HttpStatus.OK);
+        headers.set(HttpHeaders.CONTENT_TYPE, "application/json");
+        return new ResponseEntity<>(privateEventService.getMyEvent(userId, eventId), headers, HttpStatus.OK);
     }
 
     @PatchMapping("/{eventId}")
@@ -62,7 +72,8 @@ public class PrivateEventController {
                                                       @PathVariable @Min(1) @NotNull Long eventId,
                                                       @RequestBody @Valid
                                                       UpdateEventUserRequest updateEventUserRequest) {
-        return new ResponseEntity<>(privateEventService.updateMyEvent(userId, eventId, updateEventUserRequest),
+        headers.set(HttpHeaders.CONTENT_TYPE, "application/json");
+        return new ResponseEntity<>(privateEventService.updateMyEvent(userId, eventId, updateEventUserRequest), headers,
             HttpStatus.OK);
     }
 
@@ -70,7 +81,8 @@ public class PrivateEventController {
     public ResponseEntity<List<ParticipationRequestDto>> getMyEventRequests(@PathVariable @Min(1) @NotNull Long userId,
                                                                             @PathVariable @Min(1) @NotNull
                                                                             Long eventId) {
-        return new ResponseEntity<>(privateEventService.getMyEventRequests(userId, eventId), HttpStatus.OK);
+        headers.set(HttpHeaders.CONTENT_TYPE, "application/json");
+        return new ResponseEntity<>(privateEventService.getMyEventRequests(userId, eventId), headers, HttpStatus.OK);
     }
 
     @PatchMapping("/{eventId}/requests")
@@ -79,7 +91,8 @@ public class PrivateEventController {
         @PathVariable @Min(1) @NotNull Long eventId,
         @RequestBody @Valid
         EventRequestStatusUpdateRequest updateRequest) {
-        return new ResponseEntity<>(privateEventService.updateMyEventRequests(userId, eventId, updateRequest),
+        headers.set(HttpHeaders.CONTENT_TYPE, "application/json");
+        return new ResponseEntity<>(privateEventService.updateMyEventRequests(userId, eventId, updateRequest), headers,
             HttpStatus.OK);
     }
 }
