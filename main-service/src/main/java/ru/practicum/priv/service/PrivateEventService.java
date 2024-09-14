@@ -83,6 +83,7 @@ public class PrivateEventService {
                 .sorted(Comparator.comparingLong(x -> Long.parseLong(x.getUri().split("/")[2])))
                 .mapToLong(StatResponseDto::getHits)
                 .toArray();
+        eventList.sort(Comparator.comparingLong(Event::getId));
         List<EventShortDto> eventShortDtos = new ArrayList<>();
         for (int i = 0; i < hitList.length; i++) {
             eventShortDtos.add(eventShortDtoMapper.toDto(eventList.get(i), hitList[i]));
