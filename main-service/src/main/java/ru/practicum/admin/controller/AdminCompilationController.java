@@ -1,5 +1,6 @@
 package ru.practicum.admin.controller;
 
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -9,14 +10,18 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import ru.practicum.admin.service.AdminCompilationService;
 import ru.practicum.dto.compilation.CompilationDto;
 
 @RestController
 @RequestMapping("/admin/compilations")
+@RequiredArgsConstructor
 public class AdminCompilationController {
+    private final AdminCompilationService adminCompilationService;
+
     @PostMapping
     public ResponseEntity<CompilationDto> addCompilation(@RequestBody CompilationDto compilationDto) {
-        return new ResponseEntity<>(null, HttpStatus.CREATED);
+        return new ResponseEntity<>(adminCompilationService.addCompilation(compilationDto), HttpStatus.CREATED);
     }
 
     @DeleteMapping("/{compId}")
