@@ -1,11 +1,13 @@
 package ru.practicum.dto.event;
 
 import jakarta.validation.Valid;
-import jakarta.validation.constraints.Future;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.Size;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
+import ru.practicum.validation.LaterThan;
 
 import java.time.LocalDateTime;
 
@@ -14,14 +16,16 @@ import java.time.LocalDateTime;
  */
 @Data
 @Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class UpdateEventAdminRequest {
     @Size(min = 20, max = 2000)
     private String annotation;
     @Min(1)
-    private Long category;
+    private Long categoryId;
     @Size(min = 20, max = 7000)
     private String description;
-    @Future
+    @LaterThan
     private LocalDateTime eventDate;
     @Valid
     private Location location;

@@ -59,6 +59,13 @@
             <version>0.0.1-SNAPSHOT</version>
             <scope>compile</scope>
         </dependency>
+        <dependency>
+            <groupId>org.hibernate</groupId>
+            <artifactId>hibernate-jpamodelgen</artifactId>
+            <version>6.6.0.Final</version>
+            <type>pom</type>
+            <scope>provided</scope>
+        </dependency>
     </dependencies>
     <build>
         <plugins>
