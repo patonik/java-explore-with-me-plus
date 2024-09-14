@@ -34,6 +34,9 @@ public class PublicCompilationService {
             .sorted(
                 (x, y) -> x.getEventDate().isBefore(y.getEventDate()) ? -1 :
                     x.getEventDate().isAfter(y.getEventDate()) ? 1 : 0).collect(Collectors.toList());
+        if (shortDtos.isEmpty()) {
+            return allCompilationDtos;
+        }
         Params params = getParams(shortDtos);
         List<StatResponseDto> statResponseDto =
             httpStatsClient.getStats(params.start(), params.end(), params.uriList(), false);

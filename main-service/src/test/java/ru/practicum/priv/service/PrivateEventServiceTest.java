@@ -113,7 +113,7 @@ class PrivateEventServiceTest {
             .thenReturn(List.of(new StatResponseDto("main", "/events/1", 10L)));
 
         when(eventShortDtoMapper.toDto(any(Event.class), eq(10L)))
-            .thenReturn(new EventShortDto(1L, "Test Annotation", null, 0L, LocalDateTime.now(),
+            .thenReturn(new EventShortDto(1L, "Test Annotation", null, 0L, LocalDateTime.now(), LocalDateTime.now(),
                 null, false, "Test Event", 10L));
 
         List<EventShortDto> events = privateEventService.getMyEvents(1L, 0, 10);
