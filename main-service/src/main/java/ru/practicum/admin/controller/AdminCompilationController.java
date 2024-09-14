@@ -16,6 +16,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import ru.practicum.admin.service.AdminCompilationService;
 import ru.practicum.dto.compilation.CompilationDto;
+import ru.practicum.dto.compilation.NewCompilationDto;
+import ru.practicum.dto.compilation.UpdateCompilationRequest;
 
 @RestController
 @RequestMapping("/admin/compilations")
@@ -25,8 +27,8 @@ public class AdminCompilationController {
     private final AdminCompilationService adminCompilationService;
 
     @PostMapping
-    public ResponseEntity<CompilationDto> addCompilation(@RequestBody @Valid CompilationDto compilationDto) {
-        return new ResponseEntity<>(adminCompilationService.addCompilation(compilationDto), HttpStatus.CREATED);
+    public ResponseEntity<CompilationDto> addCompilation(@RequestBody @Valid NewCompilationDto newCompilationDto) {
+        return new ResponseEntity<>(adminCompilationService.addCompilation(newCompilationDto), HttpStatus.CREATED);
     }
 
     @DeleteMapping("/{compId}")
@@ -36,7 +38,8 @@ public class AdminCompilationController {
 
     @PatchMapping("/{compId}")
     public ResponseEntity<CompilationDto> updateCompilation(@PathVariable @NotNull @Min(1) Long compId,
-                                                            @RequestBody @Valid CompilationDto compilationDto) {
-        return new ResponseEntity<>(adminCompilationService.updateCompilation(compId, compilationDto), HttpStatus.OK);
+                                                            @RequestBody @Valid
+                                                            UpdateCompilationRequest updateCompilationRequest) {
+        return new ResponseEntity<>(adminCompilationService.updateCompilation(compId, updateCompilationRequest), HttpStatus.OK);
     }
 }
