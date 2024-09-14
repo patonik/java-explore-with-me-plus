@@ -13,6 +13,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
 
@@ -31,7 +32,15 @@ public class Compilation {
     private String title;
     @OneToMany(targetEntity = Event.class)
     @JoinColumn(name = "EVENT_ID", referencedColumnName = "ID")
-    private Set<Event> events;
+    private Set<Event> events = new HashSet<>();
+
+    public void addEvent(Event event) {
+        events.add(event);
+    }
+
+    public void removeEvent(Event event) {
+        events.remove(event);
+    }
 
     @Override
     public boolean equals(Object o) {

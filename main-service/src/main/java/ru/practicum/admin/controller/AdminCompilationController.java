@@ -1,8 +1,12 @@
 package ru.practicum.admin.controller;
 
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -16,22 +20,23 @@ import ru.practicum.dto.compilation.CompilationDto;
 @RestController
 @RequestMapping("/admin/compilations")
 @RequiredArgsConstructor
+@Validated
 public class AdminCompilationController {
     private final AdminCompilationService adminCompilationService;
 
     @PostMapping
-    public ResponseEntity<CompilationDto> addCompilation(@RequestBody CompilationDto compilationDto) {
+    public ResponseEntity<CompilationDto> addCompilation(@RequestBody @Valid CompilationDto compilationDto) {
         return new ResponseEntity<>(adminCompilationService.addCompilation(compilationDto), HttpStatus.CREATED);
     }
 
     @DeleteMapping("/{compId}")
-    public ResponseEntity<CompilationDto> deleteCompilation(@PathVariable String compId) {
-        return new ResponseEntity<>(null, HttpStatus.NO_CONTENT);
+    public ResponseEntity<CompilationDto> deleteCompilation(@PathVariable @NotNull @Min(1) Long compId) {
+        return new ResponseEntity<>(adminCompilationService.deleteCompilation(compId), HttpStatus.NO_CONTENT);
     }
 
     @PatchMapping("/{compId}")
-    public ResponseEntity<CompilationDto> updateCompilation(@PathVariable String compId,
-                                                            @RequestBody CompilationDto compilationDto) {
-        return new ResponseEntity<>(null, HttpStatus.OK);
+    public ResponseEntity<CompilationDto> updateCompilation(@PathVariable @NotNull @Min(1) Long compId,
+                                                            @RequestBody @Valid CompilationDto compilationDto) {
+        return new ResponseEntity<>(adminCompilationService.updateCompilation(compId, compilationDto), HttpStatus.OK);
     }
 }
