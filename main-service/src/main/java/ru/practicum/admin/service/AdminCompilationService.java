@@ -35,13 +35,12 @@ public class AdminCompilationService {
         return compilationDtoMapper.toCompilationDto(compilation);
     }
 
-    public CompilationDto deleteCompilation(Long compId) {
+    public void deleteCompilation(Long compId) {
         boolean exists = adminCompilationRepository.existsById(compId);
         if (!exists) {
             throw new NotFoundException("No compilation with id " + compId);
         }
         adminCompilationRepository.deleteById(compId);
-        return null;
     }
 
     public CompilationDto updateCompilation(Long compId, UpdateCompilationRequest compilationDto) {

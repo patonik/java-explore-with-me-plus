@@ -33,13 +33,15 @@ public class AdminCompilationController {
 
     @DeleteMapping("/{compId}")
     public ResponseEntity<CompilationDto> deleteCompilation(@PathVariable @NotNull @Min(1) Long compId) {
-        return new ResponseEntity<>(adminCompilationService.deleteCompilation(compId), HttpStatus.NO_CONTENT);
+        adminCompilationService.deleteCompilation(compId);
+        return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
 
     @PatchMapping("/{compId}")
     public ResponseEntity<CompilationDto> updateCompilation(@PathVariable @NotNull @Min(1) Long compId,
                                                             @RequestBody @Valid
                                                             UpdateCompilationRequest updateCompilationRequest) {
-        return new ResponseEntity<>(adminCompilationService.updateCompilation(compId, updateCompilationRequest), HttpStatus.OK);
+        return new ResponseEntity<>(adminCompilationService.updateCompilation(compId, updateCompilationRequest),
+            HttpStatus.OK);
     }
 }
