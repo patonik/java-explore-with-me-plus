@@ -67,13 +67,15 @@ public class PrivateEventService {
         Event event = newEventDtoMapper.toEvent(newEventDto, initiator, category, State.PENDING);
         event = privateEventRepository.save(event);
         Long confirmedRequests = 0L;
-        return eventFullDtoMapper.toDto(event, confirmedRequests);
+        Long views = 0L;
+        return eventFullDtoMapper.toDto(event, confirmedRequests, views);
     }
 
     @Transactional(readOnly = true)
     public List<EventShortDto> getMyEvents(Long userId, Integer from, Integer size) {
         Pageable pageable = PageRequest.of(from, size);
-        List<Event> eventList = privateEventRepository.findAllByInitiatorIdOrderByCreatedOnAsc(userId, pageable);
+        List<Event> eventList =
+            new ArrayList<>(privateEventRepository.findAllByInitiatorIdOrderByCreatedOnAsc(userId, pageable));
         Params params = getParams(eventList);
         List<StatResponseDto> statResponseDto =
             httpStatsClient.getStats(params.start(), params.end(), params.uriList(), false);
@@ -98,7 +100,10 @@ public class PrivateEventService {
                 .orElseThrow(() -> new NotFoundException("Event not found: " + eventId));
         Long confirmedRequests =
             privateEventRepository.getRequestCountByEventAndStatus(eventId, Status.CONFIRMED).getConfirmedRequests();
-        return eventFullDtoMapper.toDto(event, confirmedRequests);
+        Params params = getParams(List.of(event));
+        List<StatResponseDto> statResponseDto =
+            httpStatsClient.getStats(params.start(), params.end(), params.uriList(), false);
+        return eventFullDtoMapper.toDto(event, statResponseDto.getFirst().getHits(), confirmedRequests);
     }
 
     @Transactional
@@ -116,7 +121,10 @@ public class PrivateEventService {
         event = privateEventRepository.save(event);
         Long confirmedRequests =
             privateEventRepository.getRequestCountByEventAndStatus(eventId, Status.CONFIRMED).getConfirmedRequests();
-        return eventFullDtoMapper.toDto(event, confirmedRequests);
+        Params params = getParams(List.of(event));
+        List<StatResponseDto> statResponseDto =
+            httpStatsClient.getStats(params.start(), params.end(), params.uriList(), false);
+        return eventFullDtoMapper.toDto(event, statResponseDto.getFirst().getHits(), confirmedRequests);
     }
 
     public List<ParticipationRequestDto> getMyEventRequests(Long userId, Long eventId) {

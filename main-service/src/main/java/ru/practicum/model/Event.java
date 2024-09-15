@@ -21,6 +21,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.hibernate.annotations.CreationTimestamp;
+import ru.practicum.dto.Statistical;
 import ru.practicum.dto.event.Location;
 import ru.practicum.dto.event.State;
 
@@ -34,7 +35,7 @@ import java.util.Objects;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class Event {
+public class Event implements Statistical {
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "EVENT_ID_SEQ")
     @SequenceGenerator(name = "EVENT_ID_SEQ", sequenceName = "EVENT_ID_SEQ", allocationSize = 1)

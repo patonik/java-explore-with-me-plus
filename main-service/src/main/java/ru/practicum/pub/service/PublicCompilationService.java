@@ -6,6 +6,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import ru.practicum.HttpStatsClient;
 import ru.practicum.dto.StatResponseDto;
+import ru.practicum.dto.Statistical;
 import ru.practicum.dto.compilation.CompilationDto;
 import ru.practicum.dto.compilation.CompilationDtoMapper;
 import ru.practicum.dto.event.EventShortDto;
@@ -14,6 +15,7 @@ import ru.practicum.model.Compilation;
 import ru.practicum.pub.repository.PublicCompilationRepository;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -31,13 +33,11 @@ public class PublicCompilationService {
         List<EventShortDto> shortDtos = allCompilationDtos
             .stream()
             .flatMap(x -> x.getEvents().stream())
-            .sorted(
-                (x, y) -> x.getEventDate().isBefore(y.getEventDate()) ? -1 :
-                    x.getEventDate().isAfter(y.getEventDate()) ? 1 : 0).collect(Collectors.toList());
+            .collect(Collectors.toList());
         if (shortDtos.isEmpty()) {
             return allCompilationDtos;
         }
-        Params params = getParams(shortDtos);
+        Params params = getParams(new ArrayList<>(shortDtos));
         List<StatResponseDto> statResponseDto =
             httpStatsClient.getStats(params.start(), params.end(), params.uriList(), false);
         long[] hitList =
@@ -60,10 +60,12 @@ public class PublicCompilationService {
         return compilationDtoMapper.toCompilationDto(compilation);
     }
 
-    private static Params getParams(List<EventShortDto> eventList) {
-        String start = String.valueOf(eventList.getFirst().getCreatedOn());
+    private static Params getParams(List<Statistical> events) {
         String end = String.valueOf(LocalDateTime.now());
-        List<String> uriList = eventList.stream().map(x -> "/events/" + x.getId()).toList();
+        String start = String.valueOf(events.stream().min((x, y) -> x.getEventDate().isBefore(y.getEventDate()) ? -1 :
+                x.getEventDate().isAfter(y.getEventDate()) ? 1 : 0)
+            .orElseThrow(() -> new RuntimeException("start date cannot be null")).getEventDate());
+        List<String> uriList = events.stream().map(x -> "/events/" + x.getId()).toList();
         return new Params(start, end, uriList);
     }
 

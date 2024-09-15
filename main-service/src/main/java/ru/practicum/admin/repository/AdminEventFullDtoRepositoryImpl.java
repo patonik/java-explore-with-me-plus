@@ -54,7 +54,9 @@ public class AdminEventFullDtoRepositoryImpl implements AdminEventFullDtoReposit
             root.get("requestModeration"),
             root.get("title"),
             root.get("state"),
-            subquery.getSelection()));
+            subquery.getSelection(),
+            null)
+        );
         criteriaQuery.where(predicates.toArray(new Predicate[0]));
         int pageSize = pageable.getPageSize();
         TypedQuery<EventFullDto> eventFullDtoTypedQuery =

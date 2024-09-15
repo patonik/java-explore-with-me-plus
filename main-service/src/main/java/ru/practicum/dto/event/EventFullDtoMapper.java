@@ -8,5 +8,6 @@ import ru.practicum.model.Event;
 @Mapper(componentModel = MappingConstants.ComponentModel.SPRING)
 public interface EventFullDtoMapper {
     @Mapping(target = "confirmedRequests", source = "confirmedRequests")
-    EventFullDto toDto(Event event, Long confirmedRequests);
+    @Mapping(target = "views", source = "views")
+    EventFullDto toDto(Event event, Long confirmedRequests, Long views);
 }

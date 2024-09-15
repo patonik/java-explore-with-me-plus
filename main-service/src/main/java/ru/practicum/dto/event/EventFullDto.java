@@ -6,6 +6,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import ru.practicum.dto.Statistical;
 import ru.practicum.dto.category.CategoryDto;
 import ru.practicum.dto.user.UserShortDto;
 import ru.practicum.json.LocalDateTimeDeserializer;
@@ -22,7 +23,7 @@ import java.time.LocalDateTime;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class EventFullDto {
+public class EventFullDto implements Statistical {
     private Long id;
     private String annotation;
     private CategoryDto category;
@@ -44,4 +45,5 @@ public class EventFullDto {
     private String title;
     private State state;
     private Long confirmedRequests;
+    private Long views;
 }

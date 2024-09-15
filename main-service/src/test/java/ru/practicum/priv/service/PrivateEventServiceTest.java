@@ -97,7 +97,7 @@ class PrivateEventServiceTest {
         when(newEventDtoMapper.toEvent(any(NewEventDto.class), eq(user), eq(category), eq(State.PENDING)))
             .thenReturn(event);
         when(privateEventRepository.save(event)).thenReturn(event);
-        when(eventFullDtoMapper.toDto(eq(event), eq(0L))).thenReturn(new EventFullDto());
+        when(eventFullDtoMapper.toDto(eq(event), eq(0L), eq(0L))).thenReturn(new EventFullDto());
 
         EventFullDto result = privateEventService.addEvent(1L, newEventDto);
 
@@ -148,7 +148,7 @@ class PrivateEventServiceTest {
         when(privateEventRepository.save(event)).thenReturn(event);
         when(privateEventRepository.getRequestCountByEventAndStatus(1L, Status.CONFIRMED))
             .thenReturn(new RequestCount(10L));
-        when(eventFullDtoMapper.toDto(any(Event.class), anyLong())).thenReturn(new EventFullDto());
+        when(eventFullDtoMapper.toDto(any(Event.class), anyLong(), anyLong())).thenReturn(new EventFullDto());
 
         // When
         EventFullDto result = privateEventService.updateMyEvent(1L, 1L, updateEventUserRequest);
@@ -156,7 +156,7 @@ class PrivateEventServiceTest {
         // Then
         assertNotNull(result);
         verify(privateEventRepository).save(event);
-        verify(eventFullDtoMapper).toDto(eq(event), eq(10L));
+        verify(eventFullDtoMapper).toDto(eq(event), eq(10L), eq(10L));
     }
 
     @Test
