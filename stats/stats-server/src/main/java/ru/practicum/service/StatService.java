@@ -11,10 +11,7 @@ import ru.practicum.model.ServiceHit;
 import ru.practicum.repository.StatRepository;
 
 import java.time.LocalDateTime;
-import java.time.format.DateTimeParseException;
 import java.util.List;
-
-import static ru.practicum.constants.DataTransferConvention.DATE_TIME_FORMATTER;
 
 @Service
 @RequiredArgsConstructor(onConstructor = @__(@Autowired))
