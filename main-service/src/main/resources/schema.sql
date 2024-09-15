@@ -44,8 +44,8 @@ CREATE TABLE IF NOT EXISTS public.EVENTS
     REQUEST_MODERATION boolean NOT NULL,
     TITLE character varying(128) NOT NULL,
     USER_ID bigint NOT NULL,
-    LOCATION_LAT double NOT NULL,
-    LOCATION_LON double NOT NULL,
+    LOCATION_LAT double precision NOT NULL,
+    LOCATION_LON double precision NOT NULL,
     EVENT_STATE character varying(64) NOT NULL,
 
     CONSTRAINT event_pkey PRIMARY KEY (ID),
@@ -67,8 +67,8 @@ CREATE TABLE IF NOT EXISTS public.COMPILATIONS
     CONSTRAINT comp_pkey PRIMARY KEY (ID),
     CONSTRAINT comp_fk_event FOREIGN KEY ( event_id )
     REFERENCES public.events ( id )
-                      ON UPDATE NO ACTION
-                      ON UPDATE NO ACTION
+    ON UPDATE NO ACTION
+    ON DELETE NO ACTION
     );
 CREATE TABLE IF NOT EXISTS public.REQUESTS
 (
@@ -80,10 +80,10 @@ CREATE TABLE IF NOT EXISTS public.REQUESTS
     CONSTRAINT req_pkey PRIMARY KEY (ID),
     CONSTRAINT fk_user FOREIGN KEY ( user_id )
     REFERENCES public.users ( id )
-        ON UPDATE CASCADE
-        ON UPDATE CASCADE,
+                      ON UPDATE CASCADE
+                      ON DELETE CASCADE,
     CONSTRAINT fk_event FOREIGN KEY ( event_id )
     REFERENCES public.events ( id )
-        ON UPDATE CASCADE
-        ON UPDATE CASCADE
+                      ON UPDATE CASCADE
+                      ON DELETE CASCADE
     );
