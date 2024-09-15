@@ -34,10 +34,16 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.anyList;
+import static org.mockito.Mockito.anyLong;
+import static org.mockito.Mockito.anyString;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 class PrivateEventServiceTest {
 
@@ -113,7 +119,7 @@ class PrivateEventServiceTest {
             .thenReturn(List.of(new StatResponseDto("main", "/events/1", 10L)));
 
         when(eventShortDtoMapper.toDto(any(Event.class), eq(10L)))
-            .thenReturn(new EventShortDto(1L, "Test Annotation", null, 0L, LocalDateTime.now(), LocalDateTime.now(),
+            .thenReturn(new EventShortDto(1L, "Test Annotation", null, 10L, LocalDateTime.now(), LocalDateTime.now(),
                 null, false, "Test Event", 10L));
 
         List<EventShortDto> events = privateEventService.getMyEvents(1L, 0, 10);
@@ -148,6 +154,8 @@ class PrivateEventServiceTest {
         when(privateEventRepository.save(event)).thenReturn(event);
         when(privateEventRepository.getRequestCountByEventAndStatus(1L, Status.CONFIRMED))
             .thenReturn(new RequestCount(10L));
+        when(httpStatsClient.getStats(any(), any(), any(), any())).thenReturn(
+            List.of(new StatResponseDto("", "", 10L)));
         when(eventFullDtoMapper.toDto(any(Event.class), anyLong(), anyLong())).thenReturn(new EventFullDto());
 
         // When

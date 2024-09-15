@@ -11,6 +11,7 @@ import jakarta.persistence.criteria.Subquery;
 import org.springframework.data.domain.Pageable;
 import ru.practicum.dto.category.CategoryDto;
 import ru.practicum.dto.event.EventFullDto;
+import ru.practicum.dto.event.request.Status;
 import ru.practicum.dto.user.UserShortDto;
 import ru.practicum.model.Event;
 import ru.practicum.model.Request;
@@ -34,7 +35,10 @@ public class AdminEventFullDtoRepositoryImpl implements AdminEventFullDtoReposit
         Subquery<Long> subquery = criteriaQuery.subquery(Long.class);
         Root<Request> subRoot = subquery.from(Request.class);
         subquery.select(criteriaBuilder.count(subRoot.get("id")));
-        subquery.where(criteriaBuilder.equal(subRoot.get("event").get("id"), root.get("id")));
+        subquery.where(
+            criteriaBuilder.equal(subRoot.get("event").get("id"), root.get("id")),
+            criteriaBuilder.equal(subRoot.get("status"), Status.CONFIRMED)
+        );
 
         List<Predicate> predicates = getPredicates(criteriaBuilder, root, params);
         criteriaQuery.select(criteriaBuilder.construct(EventFullDto.class,
@@ -55,7 +59,7 @@ public class AdminEventFullDtoRepositoryImpl implements AdminEventFullDtoReposit
             root.get("title"),
             root.get("state"),
             subquery.getSelection(),
-            null)
+            criteriaBuilder.nullLiteral(Long.class))
         );
         criteriaQuery.where(predicates.toArray(new Predicate[0]));
         int pageSize = pageable.getPageSize();

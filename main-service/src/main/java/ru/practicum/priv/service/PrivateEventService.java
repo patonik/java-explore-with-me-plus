@@ -124,7 +124,11 @@ public class PrivateEventService {
         Params params = getParams(List.of(event));
         List<StatResponseDto> statResponseDto =
             httpStatsClient.getStats(params.start(), params.end(), params.uriList(), false);
-        return eventFullDtoMapper.toDto(event, statResponseDto.getFirst().getHits(), confirmedRequests);
+        Long hits = 0L;
+        if (!statResponseDto.isEmpty()) {
+            hits = statResponseDto.getFirst().getHits();
+        }
+        return eventFullDtoMapper.toDto(event, hits, confirmedRequests);
     }
 
     public List<ParticipationRequestDto> getMyEventRequests(Long userId, Long eventId) {

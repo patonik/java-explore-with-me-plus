@@ -1,6 +1,7 @@
 package ru.practicum.pub.service;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -25,6 +26,7 @@ import java.util.List;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class PublicEventService {
     private final PublicEventRepository publicEventRepository;
     private final HttpStatsClient httpStatsClient;
@@ -45,6 +47,7 @@ public class PublicEventService {
                                          LocalDateTime rangeEnd, Boolean onlyAvailable, SortCriterium sort,
                                          Integer from, Integer size) {
         Pageable pageable = PageRequest.of(from, size);
+        log.info(text, categories, paid, rangeStart, rangeEnd, onlyAvailable, pageable);
         List<EventShortDto> shortDtos =
             publicEventRepository.getEvents(text, categories, paid, rangeStart, rangeEnd, onlyAvailable, pageable);
         Params params = getParams(new ArrayList<>(shortDtos));
@@ -70,8 +73,9 @@ public class PublicEventService {
 
     private static Params getParams(List<Statistical> events) {
         String end = String.valueOf(LocalDateTime.now());
+        log.info(events.toString());
         String start = String.valueOf(events.stream().min(new LocalDateTimeComparator())
-            .orElseThrow(() -> new RuntimeException("start date cannot be null")).getEventDate());
+            .orElseThrow(() -> new RuntimeException("start date cannot be null")).getCreatedOn());
         List<String> uriList = events.stream().map(x -> "/events/" + x.getId()).toList();
         return new Params(start, end, uriList);
     }
@@ -82,8 +86,8 @@ public class PublicEventService {
     private static class LocalDateTimeComparator implements Comparator<Statistical> {
         @Override
         public int compare(Statistical x, Statistical y) {
-            return x.getEventDate().isBefore(y.getEventDate()) ? -1 :
-                x.getEventDate().isAfter(y.getEventDate()) ? 1 : 0;
+            return x.getCreatedOn().isBefore(y.getCreatedOn()) ? -1 :
+                x.getCreatedOn().isAfter(y.getCreatedOn()) ? 1 : 0;
         }
     }
 }

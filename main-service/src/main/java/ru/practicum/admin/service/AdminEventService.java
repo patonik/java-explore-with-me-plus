@@ -22,6 +22,7 @@ import ru.practicum.model.Event;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
 
@@ -45,13 +46,19 @@ public class AdminEventService {
         Params params = getParams(new ArrayList<>(events));
         List<StatResponseDto> statResponseDto =
             httpStatsClient.getStats(params.start(), params.end(), params.uriList(), false);
-        long[] hitList =
-            statResponseDto
-                .stream()
-                .sorted(Comparator.comparingLong(x -> Long.parseLong(x.getUri().split("/")[2])))
-                .mapToLong(StatResponseDto::getHits)
-                .toArray();
-        events.sort(Comparator.comparingLong(EventFullDto::getId));
+        long[] hitList;
+        if (statResponseDto.isEmpty()) {
+            hitList = new long[events.size()];
+            Arrays.fill(hitList, 0L);
+        } else {
+            hitList =
+                statResponseDto
+                    .stream()
+                    .sorted(Comparator.comparingLong(x -> Long.parseLong(x.getUri().split("/")[2])))
+                    .mapToLong(StatResponseDto::getHits)
+                    .toArray();
+            events.sort(Comparator.comparingLong(EventFullDto::getId));
+        }
         for (int i = 0; i < hitList.length; i++) {
             events.get(i).setViews(hitList[i]);
         }
@@ -83,9 +90,9 @@ public class AdminEventService {
 
     private static Params getParams(List<Statistical> events) {
         String end = String.valueOf(LocalDateTime.now());
-        String start = String.valueOf(events.stream().min((x, y) -> x.getEventDate().isBefore(y.getEventDate()) ? -1 :
-                x.getEventDate().isAfter(y.getEventDate()) ? 1 : 0)
-            .orElseThrow(() -> new RuntimeException("start date cannot be null")).getEventDate());
+        String start = String.valueOf(events.stream().min((x, y) -> x.getCreatedOn().isBefore(y.getCreatedOn()) ? -1 :
+                x.getCreatedOn().isAfter(y.getCreatedOn()) ? 1 : 0)
+            .orElseThrow(() -> new RuntimeException("start date cannot be null")).getCreatedOn());
         List<String> uriList = events.stream().map(x -> "/events/" + x.getId()).toList();
         return new Params(start, end, uriList);
     }

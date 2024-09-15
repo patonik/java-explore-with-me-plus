@@ -62,9 +62,9 @@ public class PublicCompilationService {
 
     private static Params getParams(List<Statistical> events) {
         String end = String.valueOf(LocalDateTime.now());
-        String start = String.valueOf(events.stream().min((x, y) -> x.getEventDate().isBefore(y.getEventDate()) ? -1 :
-                x.getEventDate().isAfter(y.getEventDate()) ? 1 : 0)
-            .orElseThrow(() -> new RuntimeException("start date cannot be null")).getEventDate());
+        String start = String.valueOf(events.stream().min((x, y) -> x.getCreatedOn().isBefore(y.getCreatedOn()) ? -1 :
+                x.getCreatedOn().isAfter(y.getCreatedOn()) ? 1 : 0)
+            .orElseThrow(() -> new RuntimeException("start date cannot be null")).getCreatedOn());
         List<String> uriList = events.stream().map(x -> "/events/" + x.getId()).toList();
         return new Params(start, end, uriList);
     }

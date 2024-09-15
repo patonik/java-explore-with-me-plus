@@ -63,7 +63,7 @@ class PrivateEventControllerTest {
                 false,
                 "pff",
                 State.PENDING,
-                3L);  // Initialize EventFullDto with your fields
+                3L, null);  // Initialize EventFullDto with your fields
         eventShortDto = new EventShortDto();  // Initialize EventShortDto with your fields
         newEventDto = new NewEventDto();  // Initialize NewEventDto with your fields
         LocalDateTime eventDate = LocalDateTime.now().plusDays(1);

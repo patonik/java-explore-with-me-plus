@@ -7,13 +7,16 @@ import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.Join;
 import jakarta.persistence.criteria.Predicate;
 import jakarta.persistence.criteria.Root;
+import jakarta.persistence.criteria.Subquery;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Repository;
 import ru.practicum.dto.category.CategoryDto;
 import ru.practicum.dto.event.EventShortDto;
+import ru.practicum.dto.event.request.Status;
 import ru.practicum.dto.user.UserShortDto;
 import ru.practicum.model.Category;
 import ru.practicum.model.Event;
+import ru.practicum.model.Request;
 import ru.practicum.model.User;
 
 import java.time.LocalDateTime;
@@ -36,6 +39,13 @@ public class PublicEventShortDtoRepositoryImpl implements PublicEventShortDtoRep
         Root<Event> eventRoot = cq.from(Event.class);
         Join<Event, Category> categoryJoin = eventRoot.join("category");
         Join<Event, User> userJoin = eventRoot.join("initiator");
+        Subquery<Long> subquery = cq.subquery(Long.class);
+        Root<Request> subRoot = subquery.from(Request.class);
+        subquery.select(cb.count(subRoot.get("id")));
+        subquery.where(
+            cb.equal(subRoot.get("event").get("id"), eventRoot.get("id")),
+            cb.equal(subRoot.get("status"), Status.CONFIRMED)
+        );
         cq.select(cb.construct(
             EventShortDto.class,
             eventRoot.get("id"),
@@ -43,7 +53,7 @@ public class PublicEventShortDtoRepositoryImpl implements PublicEventShortDtoRep
             cb.construct(
                 CategoryDto.class, categoryJoin.get("id"), categoryJoin.get("name")
             ),
-            cb.nullLiteral(Long.class), // confirmedRequests will be filled later
+            subquery.getSelection(), // confirmedRequests will be filled later
             eventRoot.get("eventDate"),
             eventRoot.get("createdOn"),
             cb.construct(

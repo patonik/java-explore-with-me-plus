@@ -8,8 +8,10 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import ru.practicum.HttpStatsClient;
 import ru.practicum.admin.repository.AdminCategoryRepository;
 import ru.practicum.admin.repository.AdminEventRepository;
+import ru.practicum.dto.StatResponseDto;
 import ru.practicum.dto.event.EventFullDto;
 import ru.practicum.dto.event.EventFullDtoMapper;
 import ru.practicum.dto.event.UpdateEventAdminRequest;
@@ -24,14 +26,22 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.anyLong;
+import static org.mockito.Mockito.eq;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 class AdminEventServiceTest {
 
     @Mock
     private AdminEventRepository adminEventRepository;
+    @Mock
+    private HttpStatsClient httpStatsClient;
 
     @Mock
     private AdminCategoryRepository categoryRepository;
@@ -88,6 +98,8 @@ class AdminEventServiceTest {
         Pageable pageable = PageRequest.of(from, size);
         when(adminEventRepository.getEvents(any(), any(), any(), any(), any(), eq(pageable)))
             .thenReturn(List.of(eventFullDto));
+        when(httpStatsClient.getStats(any(), any(), any(), any())).thenReturn(
+            List.of(new StatResponseDto("", "", 10L)));
 
         // Call the method
         List<EventFullDto> result =
@@ -108,7 +120,9 @@ class AdminEventServiceTest {
         when(adminEventRepository.save(any(Event.class))).thenReturn(event);
         when(adminEventRepository.getRequestCountByEventAndStatus(anyLong(), eq(Status.CONFIRMED)))
             .thenReturn(new RequestCount(100L));
-        when(eventFullDtoMapper.toDto(any(Event.class), anyLong())).thenReturn(eventFullDto);
+        when(eventFullDtoMapper.toDto(any(Event.class), anyLong(), anyLong())).thenReturn(eventFullDto);
+        when(httpStatsClient.getStats(any(), any(), any(), any())).thenReturn(
+            List.of(new StatResponseDto("", "", 10L)));
 
         // Call the method
         EventFullDto result = adminEventService.updateEvent(1L, adminRequest);
@@ -120,7 +134,7 @@ class AdminEventServiceTest {
         verify(updateEventAdminRequestMapper).updateEvent(any(), any(), any());
         verify(adminEventRepository).save(any(Event.class));
         verify(adminEventRepository).getRequestCountByEventAndStatus(anyLong(), eq(Status.CONFIRMED));
-        verify(eventFullDtoMapper).toDto(any(Event.class), anyLong());
+        verify(eventFullDtoMapper).toDto(any(Event.class), anyLong(), anyLong());
     }
 
     @Test
