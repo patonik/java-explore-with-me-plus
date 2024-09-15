@@ -18,7 +18,6 @@ import lombok.Setter;
 import org.hibernate.annotations.CreationTimestamp;
 import ru.practicum.dto.event.request.Status;
 
-import java.io.Serializable;
 import java.time.LocalDateTime;
 
 @Entity
@@ -27,7 +26,7 @@ import java.time.LocalDateTime;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class Request implements Serializable {
+public class Request {
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "REQ_ID_SEQ")
     @SequenceGenerator(name = "REQ_ID_SEQ", sequenceName = "REQ_ID_SEQ", allocationSize = 1)
