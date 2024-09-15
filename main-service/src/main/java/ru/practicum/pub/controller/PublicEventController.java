@@ -11,8 +11,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import ru.practicum.DataTransferConvention;
-import ru.practicum.HttpStatsClient;
-import ru.practicum.dto.StatRequestDto;
 import ru.practicum.dto.event.EventFullDto;
 import ru.practicum.dto.event.EventShortDto;
 import ru.practicum.dto.event.SortCriterium;
@@ -42,30 +40,29 @@ import java.util.List;
 @RequiredArgsConstructor
 public class PublicEventController {
     private final PublicEventService publicEventService;
-    private final HttpStatsClient httpStatsClient;
 
     @GetMapping
-    public ResponseEntity<List<EventShortDto>> getEvents(@RequestParam String text,
-                                                         @RequestParam Long[] categories,
-                                                         @RequestParam Boolean paid,
-                                                         @RequestParam
+    public ResponseEntity<List<EventShortDto>> getEvents(@RequestParam(required = false) String text,
+                                                         @RequestParam(required = false) Long[] categories,
+                                                         @RequestParam(required = false) Boolean paid,
+                                                         @RequestParam(required = false)
                                                          @DateTimeFormat(pattern = DataTransferConvention.DATE_TIME_PATTERN)
                                                          LocalDateTime rangeStart,
-                                                         @RequestParam
+                                                         @RequestParam(required = false)
                                                          @DateTimeFormat(pattern = DataTransferConvention.DATE_TIME_PATTERN)
                                                          LocalDateTime rangeEnd,
                                                          @RequestParam(required = false, defaultValue = "false")
                                                          Boolean onlyAvailable,
-                                                         @RequestParam SortCriterium sort,
+                                                         @RequestParam(required = false) SortCriterium sort,
                                                          @RequestParam(required = false,
                                                              defaultValue = DataTransferConvention.FROM)
                                                          Integer from,
                                                          @RequestParam(required = false,
                                                              defaultValue = DataTransferConvention.SIZE)
-                                                         Integer size, HttpServletRequest req) {
-        sendHitToStatsService(req);
+                                                         Integer size, HttpServletRequest request) {
         return new ResponseEntity<>(
-            publicEventService.getEvents(text, categories, paid, rangeStart, rangeEnd, onlyAvailable, sort, from, size),
+            publicEventService.getEvents(text, categories, paid, rangeStart, rangeEnd, onlyAvailable, sort, from, size,
+                request),
             HttpStatus.OK);
     }
 
@@ -78,21 +75,7 @@ public class PublicEventController {
      */
     @GetMapping("/{id}")
     public ResponseEntity<EventFullDto> getEvent(@PathVariable Long id, HttpServletRequest request) {
-        sendHitToStatsService(request);
-        return new ResponseEntity<>(publicEventService.getEvent(id), HttpStatus.OK);
-    }
-
-    private void sendHitToStatsService(HttpServletRequest request) {
-        StatRequestDto hit = StatRequestDto.builder()
-            .app("public-event-service")
-            .uri(request.getRequestURI())
-            .ip(request.getRemoteAddr())
-            .timestamp(LocalDateTime.parse(
-                LocalDateTime.now().format(DataTransferConvention.DATE_TIME_FORMATTER))) // Current timestamp
-            .build();
-
-        // Send the hit to the statistics service
-        httpStatsClient.sendHit(hit, StatRequestDto.class);
+        return new ResponseEntity<>(publicEventService.getEvent(id, request), HttpStatus.OK);
     }
 
 

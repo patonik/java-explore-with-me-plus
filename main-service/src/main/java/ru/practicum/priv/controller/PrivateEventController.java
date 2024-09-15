@@ -4,8 +4,7 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -20,13 +19,13 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import ru.practicum.DataTransferConvention;
-import ru.practicum.dto.event.request.EventRequestStatusUpdateRequest;
 import ru.practicum.dto.event.EventFullDto;
-import ru.practicum.dto.event.request.EventRequestStatusUpdateResult;
 import ru.practicum.dto.event.EventShortDto;
 import ru.practicum.dto.event.NewEventDto;
-import ru.practicum.dto.event.request.ParticipationRequestDto;
 import ru.practicum.dto.event.UpdateEventUserRequest;
+import ru.practicum.dto.event.request.EventRequestStatusUpdateRequest;
+import ru.practicum.dto.event.request.EventRequestStatusUpdateResult;
+import ru.practicum.dto.event.request.ParticipationRequestDto;
 import ru.practicum.priv.service.PrivateEventService;
 
 import java.util.List;
@@ -35,8 +34,8 @@ import java.util.List;
 @RequestMapping("users/{userId}/events")
 @RequiredArgsConstructor
 @Validated
+@Slf4j
 public class PrivateEventController {
-    private static final Logger log = LoggerFactory.getLogger(PrivateEventController.class);
     private final PrivateEventService privateEventService;
     private final MultiValueMap<String, String> headers = new HttpHeaders();
 

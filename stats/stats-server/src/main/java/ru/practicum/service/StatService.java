@@ -33,17 +33,9 @@ public class StatService {
         return dto;
     }
 
-    public List<StatResponseDto> getHits(String start, String end, String[] uris, Boolean unique) {
-        LocalDateTime from;
-        LocalDateTime to;
-        try {
-            from = LocalDateTime.parse(start, DATE_TIME_FORMATTER);
-            to = LocalDateTime.parse(end, DATE_TIME_FORMATTER);
-        } catch (DateTimeParseException e) {
-            throw new RuntimeException(e);
-        }
+    public List<StatResponseDto> getHits(LocalDateTime start, LocalDateTime end, String[] uris, Boolean unique) {
         List<StatResponseDto> statResponseDtos;
-        statResponseDtos = statRepository.getHitListElementDtos(from, to, uris, unique);
+        statResponseDtos = statRepository.getHitListElementDtos(start, end, uris, unique);
         return statResponseDtos;
     }
 }

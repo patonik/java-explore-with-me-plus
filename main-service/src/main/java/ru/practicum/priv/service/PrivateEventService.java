@@ -1,6 +1,7 @@
 package ru.practicum.priv.service;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -31,8 +32,9 @@ import ru.practicum.priv.repository.PrivateCategoryRepository;
 import ru.practicum.priv.repository.PrivateEventRepository;
 import ru.practicum.priv.repository.PrivateUserRepository;
 import ru.practicum.priv.repository.RequestRepository;
+import ru.practicum.util.Params;
+import ru.practicum.util.Statistical;
 
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Comparator;
@@ -45,6 +47,7 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class PrivateEventService {
     private final PrivateEventRepository privateEventRepository;
     private final PrivateUserRepository privateUserRepository;
@@ -76,7 +79,8 @@ public class PrivateEventService {
         Pageable pageable = PageRequest.of(from, size);
         List<Event> eventList =
             new ArrayList<>(privateEventRepository.findAllByInitiatorIdOrderByCreatedOnAsc(userId, pageable));
-        Params params = getParams(eventList);
+        Params params = Statistical.getParams(new ArrayList<>(eventList));
+        log.info("parameters for statService created: {}", params);
         List<StatResponseDto> statResponseDto =
             httpStatsClient.getStats(params.start(), params.end(), params.uriList(), false);
         long[] hitList =
@@ -100,7 +104,8 @@ public class PrivateEventService {
                 .orElseThrow(() -> new NotFoundException("Event not found: " + eventId));
         Long confirmedRequests =
             privateEventRepository.getRequestCountByEventAndStatus(eventId, Status.CONFIRMED).getConfirmedRequests();
-        Params params = getParams(List.of(event));
+        Params params = Statistical.getParams(List.of(event));
+        log.info("parameters for statService created: {}", params);
         List<StatResponseDto> statResponseDto =
             httpStatsClient.getStats(params.start(), params.end(), params.uriList(), false);
         return eventFullDtoMapper.toDto(event, statResponseDto.getFirst().getHits(), confirmedRequests);
@@ -121,7 +126,8 @@ public class PrivateEventService {
         event = privateEventRepository.save(event);
         Long confirmedRequests =
             privateEventRepository.getRequestCountByEventAndStatus(eventId, Status.CONFIRMED).getConfirmedRequests();
-        Params params = getParams(List.of(event));
+        Params params = Statistical.getParams(List.of(event));
+        log.info("parameters for statService created: {}", params);
         List<StatResponseDto> statResponseDto =
             httpStatsClient.getStats(params.start(), params.end(), params.uriList(), false);
         Long hits = 0L;
@@ -218,16 +224,5 @@ public class PrivateEventService {
             case null, default:
                 throw new ConflictException("Incorrect update request status: " + updateRequestStatus);
         }
-    }
-
-
-    private static Params getParams(List<Event> eventList) {
-        String start = String.valueOf(eventList.getFirst().getCreatedOn());
-        String end = String.valueOf(LocalDateTime.now());
-        List<String> uriList = eventList.stream().map(x -> "/events/" + x.getId()).toList();
-        return new Params(start, end, uriList);
-    }
-
-    private record Params(String start, String end, List<String> uriList) {
     }
 }

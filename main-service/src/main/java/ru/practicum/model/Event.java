@@ -21,7 +21,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.hibernate.annotations.CreationTimestamp;
-import ru.practicum.dto.Statistical;
+import ru.practicum.util.Statistical;
 import ru.practicum.dto.event.Location;
 import ru.practicum.dto.event.State;
 

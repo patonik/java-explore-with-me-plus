@@ -1,27 +1,28 @@
 package ru.practicum.pub.service;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import ru.practicum.HttpStatsClient;
 import ru.practicum.dto.StatResponseDto;
-import ru.practicum.dto.Statistical;
 import ru.practicum.dto.compilation.CompilationDto;
 import ru.practicum.dto.compilation.CompilationDtoMapper;
 import ru.practicum.dto.event.EventShortDto;
 import ru.practicum.exception.NotFoundException;
 import ru.practicum.model.Compilation;
 import ru.practicum.pub.repository.PublicCompilationRepository;
+import ru.practicum.util.Params;
+import ru.practicum.util.Statistical;
 
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class PublicCompilationService {
     private final PublicCompilationRepository publicCompilationRepository;
     private final HttpStatsClient httpStatsClient;
@@ -33,20 +34,20 @@ public class PublicCompilationService {
         List<EventShortDto> shortDtos = allCompilationDtos
             .stream()
             .flatMap(x -> x.getEvents().stream())
-            .collect(Collectors.toList());
+            .toList();
         if (shortDtos.isEmpty()) {
             return allCompilationDtos;
         }
-        Params params = getParams(new ArrayList<>(shortDtos));
-        List<StatResponseDto> statResponseDto =
+        Params params = Statistical.getParams(new ArrayList<>(shortDtos));
+        log.info("parameters for statService created: {}", params);
+        List<StatResponseDto> statResponseDtoList =
             httpStatsClient.getStats(params.start(), params.end(), params.uriList(), false);
-        long[] hitList =
-            statResponseDto
-                .stream()
-                .sorted(Comparator.comparingLong(x -> Long.parseLong(x.getUri().split("/")[2])))
-                .mapToLong(StatResponseDto::getHits)
-                .toArray();
-        shortDtos.sort(Comparator.comparingLong(EventShortDto::getId));
+        long[] hitList = statResponseDtoList
+            .stream()
+            .sorted(Comparator.comparingLong(x -> Long.parseLong(x.getUri().split("/")[2])))
+            .mapToLong(StatResponseDto::getHits)
+            .toArray();
+        shortDtos.sort(Comparator.comparingLong(Statistical::getId));
         for (int i = 0; i < hitList.length; i++) {
             shortDtos.get(i).setViews(hitList[i]);
         }
@@ -58,17 +59,5 @@ public class PublicCompilationService {
             publicCompilationRepository.findById(compId)
                 .orElseThrow(() -> new NotFoundException("Compilation with id " + compId + " not found"));
         return compilationDtoMapper.toCompilationDto(compilation);
-    }
-
-    private static Params getParams(List<Statistical> events) {
-        String end = String.valueOf(LocalDateTime.now());
-        String start = String.valueOf(events.stream().min((x, y) -> x.getCreatedOn().isBefore(y.getCreatedOn()) ? -1 :
-                x.getCreatedOn().isAfter(y.getCreatedOn()) ? 1 : 0)
-            .orElseThrow(() -> new RuntimeException("start date cannot be null")).getCreatedOn());
-        List<String> uriList = events.stream().map(x -> "/events/" + x.getId()).toList();
-        return new Params(start, end, uriList);
-    }
-
-    private record Params(String start, String end, List<String> uriList) {
     }
 }

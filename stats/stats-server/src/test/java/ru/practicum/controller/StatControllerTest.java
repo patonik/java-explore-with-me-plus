@@ -75,7 +75,7 @@ class StatControllerTest {
 
         List<StatResponseDto> statResponseDtos = Collections.singletonList(statResponseDto);
 
-        Mockito.when(statService.getHits(any(String.class), any(String.class), any(String[].class), anyBoolean()))
+        Mockito.when(statService.getHits(any(), any(), any(String[].class), anyBoolean()))
             .thenReturn(statResponseDtos);
 
         mockMvc.perform(get("/stats")

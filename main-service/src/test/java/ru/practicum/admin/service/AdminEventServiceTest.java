@@ -69,6 +69,7 @@ class AdminEventServiceTest {
         // Set up test data
         event = new Event();
         event.setId(1L);
+        event.setCreatedOn(LocalDateTime.now());
 
         category = new Category();
         category.setId(1L);
@@ -77,6 +78,7 @@ class AdminEventServiceTest {
         adminRequest.setCategoryId(1L);
 
         eventFullDto = new EventFullDto();
+        eventFullDto.setCreatedOn(LocalDateTime.now());
     }
 
     @AfterEach

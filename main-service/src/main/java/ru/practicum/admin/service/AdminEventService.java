@@ -1,6 +1,7 @@
 package ru.practicum.admin.service;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -9,9 +10,9 @@ import ru.practicum.HttpStatsClient;
 import ru.practicum.admin.repository.AdminCategoryRepository;
 import ru.practicum.admin.repository.AdminEventRepository;
 import ru.practicum.dto.StatResponseDto;
-import ru.practicum.dto.Statistical;
 import ru.practicum.dto.event.EventFullDto;
 import ru.practicum.dto.event.EventFullDtoMapper;
+import ru.practicum.dto.event.State;
 import ru.practicum.dto.event.UpdateEventAdminRequest;
 import ru.practicum.dto.event.UpdateEventAdminRequestMapper;
 import ru.practicum.dto.event.request.RequestCount;
@@ -19,6 +20,8 @@ import ru.practicum.dto.event.request.Status;
 import ru.practicum.exception.NotFoundException;
 import ru.practicum.model.Category;
 import ru.practicum.model.Event;
+import ru.practicum.util.Params;
+import ru.practicum.util.Statistical;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -28,6 +31,7 @@ import java.util.List;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class AdminEventService {
     private final AdminEventRepository adminEventRepository;
     private final AdminCategoryRepository categoryRepository;
@@ -43,7 +47,8 @@ public class AdminEventService {
         if (events.isEmpty()) {
             return events;
         }
-        Params params = getParams(new ArrayList<>(events));
+        Params params = Statistical.getParams(new ArrayList<>(events));
+        log.info("parameters for statService created: {}", params);
         List<StatResponseDto> statResponseDto =
             httpStatsClient.getStats(params.start(), params.end(), params.uriList(), false);
         long[] hitList;
@@ -77,26 +82,33 @@ public class AdminEventService {
         } else {
             category = event.getCategory();
         }
+        log.info("updating event: {}", event);
         event = updateEventAdminRequestMapper.updateEvent(adminRequest, event,
             category);
+        log.info("updated event: {}", event);
+        log.info("saving...");
+        switch (adminRequest.getStateAction()) {
+            case null:
+                break;
+            case PUBLISH_EVENT:
+                event.setState(State.PUBLISHED);
+                event.setPublishedOn(LocalDateTime.now());
+                break;
+            case REJECT_EVENT:
+                event.setState(State.CANCELED);
+                break;
+        }
         event = adminEventRepository.save(event);
         RequestCount requestCount = adminEventRepository.getRequestCountByEventAndStatus(eventId, Status.CONFIRMED);
-        Params params = getParams(List.of(event));
+        Params params = Statistical.getParams(List.of(event));
+        log.info("parameters for statService created: {}", params);
         List<StatResponseDto> statResponseDtoList =
             httpStatsClient.getStats(params.start(), params.end(), params.uriList(), false);
-        return eventFullDtoMapper.toDto(event, statResponseDtoList.getFirst().getHits(),
+        Long hits = 0L;
+        if (!statResponseDtoList.isEmpty()) {
+            hits = statResponseDtoList.getFirst().getHits();
+        }
+        return eventFullDtoMapper.toDto(event, hits,
             requestCount.getConfirmedRequests());
-    }
-
-    private static Params getParams(List<Statistical> events) {
-        String end = String.valueOf(LocalDateTime.now());
-        String start = String.valueOf(events.stream().min((x, y) -> x.getCreatedOn().isBefore(y.getCreatedOn()) ? -1 :
-                x.getCreatedOn().isAfter(y.getCreatedOn()) ? 1 : 0)
-            .orElseThrow(() -> new RuntimeException("start date cannot be null")).getCreatedOn());
-        List<String> uriList = events.stream().map(x -> "/events/" + x.getId()).toList();
-        return new Params(start, end, uriList);
-    }
-
-    private record Params(String start, String end, List<String> uriList) {
     }
 }

@@ -1,13 +1,14 @@
 package ru.practicum.pub.service;
 
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import ru.practicum.HttpStatsClient;
+import ru.practicum.dto.StatRequestDto;
 import ru.practicum.dto.StatResponseDto;
-import ru.practicum.dto.Statistical;
 import ru.practicum.dto.event.EventFullDto;
 import ru.practicum.dto.event.EventFullDtoMapper;
 import ru.practicum.dto.event.EventShortDto;
@@ -18,6 +19,9 @@ import ru.practicum.dto.event.request.Status;
 import ru.practicum.exception.NotFoundException;
 import ru.practicum.model.Event;
 import ru.practicum.pub.repository.PublicEventRepository;
+import ru.practicum.util.LocalDateTimeComparator;
+import ru.practicum.util.Params;
+import ru.practicum.util.Statistical;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -32,25 +36,36 @@ public class PublicEventService {
     private final HttpStatsClient httpStatsClient;
     private final EventFullDtoMapper eventFullDtoMapper;
 
-    public EventFullDto getEvent(Long id) {
+    public EventFullDto getEvent(Long id, HttpServletRequest request) {
         Event event = publicEventRepository.findByIdAndState(id, State.PUBLISHED)
             .orElseThrow(() -> new NotFoundException("Event not found with id: " + id));
-        Params params = getParams(List.of(event));
+        Params params = Statistical.getParams(List.of(event));
+        log.info("parameters for statService created: {}", params);
         List<StatResponseDto> statResponseDtoList =
             httpStatsClient.getStats(params.start(), params.end(), params.uriList(), false);
         RequestCount requestCount = publicEventRepository.getRequestCountByEventAndStatus(id, Status.CONFIRMED);
+        Long hits = 0L;
+        if (!statResponseDtoList.isEmpty()) {
+            hits = statResponseDtoList.getFirst().getHits();
+        }
+        sendHitToStatsService(request);
         return eventFullDtoMapper.toDto(event,
-            requestCount.getConfirmedRequests(), statResponseDtoList.getFirst().getHits());
+            requestCount.getConfirmedRequests(), hits);
     }
 
     public List<EventShortDto> getEvents(String text, Long[] categories, Boolean paid, LocalDateTime rangeStart,
                                          LocalDateTime rangeEnd, Boolean onlyAvailable, SortCriterium sort,
-                                         Integer from, Integer size) {
+                                         Integer from, Integer size, HttpServletRequest request) {
         Pageable pageable = PageRequest.of(from, size);
         log.info(text, categories, paid, rangeStart, rangeEnd, onlyAvailable, pageable);
         List<EventShortDto> shortDtos =
             publicEventRepository.getEvents(text, categories, paid, rangeStart, rangeEnd, onlyAvailable, pageable);
-        Params params = getParams(new ArrayList<>(shortDtos));
+        if (shortDtos.isEmpty()) {
+            sendHitToStatsService(request);
+            return shortDtos;
+        }
+        Params params = Statistical.getParams(new ArrayList<>(shortDtos));
+        log.info("parameters for statService created: {}", params);
         List<StatResponseDto> statResponseDtoList =
             httpStatsClient.getStats(params.start(), params.end(), params.uriList(), false);
         long[] hitList = statResponseDtoList
@@ -58,36 +73,32 @@ public class PublicEventService {
             .sorted(Comparator.comparingLong(x -> Long.parseLong(x.getUri().split("/")[2])))
             .mapToLong(StatResponseDto::getHits)
             .toArray();
-        shortDtos.sort(Comparator.comparingLong(EventShortDto::getId));
+        shortDtos.sort(Comparator.comparingLong(Statistical::getId));
         for (int i = 0; i < hitList.length; i++) {
             shortDtos.get(i).setViews(hitList[i]);
         }
         switch (sort) {
+            case null:
+                break;
             case VIEWS:
                 shortDtos.sort(Comparator.comparingLong(EventShortDto::getViews));
+                break;
             case EVENT_DATE:
                 shortDtos.sort(new LocalDateTimeComparator());
+                break;
         }
+        sendHitToStatsService(request);
         return shortDtos;
     }
 
-    private static Params getParams(List<Statistical> events) {
-        String end = String.valueOf(LocalDateTime.now());
-        log.info(events.toString());
-        String start = String.valueOf(events.stream().min(new LocalDateTimeComparator())
-            .orElseThrow(() -> new RuntimeException("start date cannot be null")).getCreatedOn());
-        List<String> uriList = events.stream().map(x -> "/events/" + x.getId()).toList();
-        return new Params(start, end, uriList);
+    private void sendHitToStatsService(HttpServletRequest request) {
+        StatRequestDto hit = StatRequestDto.builder()
+            .app("public-event-service")
+            .uri(request.getRequestURI())
+            .ip(request.getRemoteAddr())
+            .timestamp(LocalDateTime.now())
+            .build();
+        httpStatsClient.sendHit(hit, StatRequestDto.class);
     }
 
-    private record Params(String start, String end, List<String> uriList) {
-    }
-
-    private static class LocalDateTimeComparator implements Comparator<Statistical> {
-        @Override
-        public int compare(Statistical x, Statistical y) {
-            return x.getCreatedOn().isBefore(y.getCreatedOn()) ? -1 :
-                x.getCreatedOn().isAfter(y.getCreatedOn()) ? 1 : 0;
-        }
-    }
 }
