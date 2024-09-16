@@ -1,5 +1,6 @@
 package ru.practicum.admin.controller;
 
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
@@ -29,12 +30,12 @@ public class AdminEventController {
     private final AdminEventService adminEventService;
 
     @GetMapping
-    public ResponseEntity<List<EventFullDto>> getEvents(@RequestParam Long[] users,
-                                                        @RequestParam String[] states,
-                                                        @RequestParam Long[] categories,
-                                                        @RequestParam @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+    public ResponseEntity<List<EventFullDto>> getEvents(@RequestParam(required = false) Long[] users,
+                                                        @RequestParam(required = false) String[] states,
+                                                        @RequestParam(required = false) Long[] categories,
+                                                        @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")
                                                         LocalDateTime rangeStart,
-                                                        @RequestParam @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+                                                        @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")
                                                         LocalDateTime rangeEnd,
                                                         @RequestParam(required = false, defaultValue = "0")
                                                         Integer from,
@@ -46,7 +47,7 @@ public class AdminEventController {
 
     @PatchMapping("/{eventId}")
     public ResponseEntity<EventFullDto> updateEvent(@PathVariable Long eventId,
-                                                    @RequestBody UpdateEventAdminRequest adminRequest) {
+                                                    @RequestBody @Valid UpdateEventAdminRequest adminRequest) {
         return new ResponseEntity<>(adminEventService.updateEvent(eventId, adminRequest), HttpStatus.OK);
     }
 }

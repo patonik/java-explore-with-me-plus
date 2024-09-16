@@ -97,6 +97,8 @@ public class PublicEventShortDtoRepositoryImpl implements PublicEventShortDtoRep
         LocalDateTime rangeEnd = (LocalDateTime) args[4];
         if (rangeStart != null && rangeEnd != null) {
             predicates.add(cb.between(eventRoot.get("eventDate"), rangeStart, rangeEnd));
+        } else if (rangeStart != null) {
+            predicates.add(cb.between(eventRoot.get("eventDate"), rangeStart, LocalDateTime.now()));
         } else {
             predicates.add(cb.greaterThan(eventRoot.get("eventDate"), LocalDateTime.now()));
         }

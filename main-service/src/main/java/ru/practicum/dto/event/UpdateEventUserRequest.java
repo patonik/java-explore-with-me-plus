@@ -3,6 +3,7 @@ package ru.practicum.dto.event;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -29,6 +30,7 @@ public class UpdateEventUserRequest {
     @Valid
     private Location location;
     private Boolean paid;
+    @Positive
     private Integer participantLimit;
     private Boolean requestModeration;
     private UserStateAction userStateAction;

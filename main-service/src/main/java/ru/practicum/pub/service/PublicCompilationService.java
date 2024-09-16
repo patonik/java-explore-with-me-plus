@@ -42,7 +42,7 @@ public class PublicCompilationService {
         Params params = Statistical.getParams(new ArrayList<>(shortDtos));
         log.info("parameters for statService created: {}", params);
         List<StatResponseDto> statResponseDtoList =
-            httpStatsClient.getStats(params.start(), params.end(), params.uriList(), false);
+            httpStatsClient.getStats(params.start(), params.end(), params.uriList(), true);
         long[] hitList = statResponseDtoList
             .stream()
             .sorted(Comparator.comparingLong(x -> Long.parseLong(x.getUri().split("/")[2])))

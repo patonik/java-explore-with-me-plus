@@ -17,6 +17,7 @@ public interface RequestRepository extends JpaRepository<Request, Long> {
         SELECT
             new ru.practicum.dto.event.request.ParticipationRequestDto(
                 r.id,
+                r.event.id,
                 r.created,
                 r.requester.id,
                 r.status
@@ -32,6 +33,7 @@ public interface RequestRepository extends JpaRepository<Request, Long> {
         SELECT
             new ru.practicum.dto.event.request.ParticipationRequestDto(
                 r.id,
+                r.event.id,
                 r.created,
                 r.requester.id,
                 r.status
@@ -47,6 +49,7 @@ public interface RequestRepository extends JpaRepository<Request, Long> {
         SELECT
             new ru.practicum.dto.event.request.ParticipationRequestDto(
                 r.id,
+                r.event.id,
                 r.created,
                 r.requester.id,
                 r.status
@@ -68,6 +71,8 @@ public interface RequestRepository extends JpaRepository<Request, Long> {
 
     Optional<Request> findByIdAndRequesterId(Long requestId, Long userId);
 
-    Optional<Request> findByRequesterIdAndEventId(Long userId, Long eventId);
+    boolean existsByRequesterIdAndEventId(Long userId, Long eventId);
+
+    long countByEventIdAndStatus(Long eventId, Status status);
 
 }

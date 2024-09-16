@@ -79,10 +79,11 @@ public class PrivateEventService {
         Pageable pageable = PageRequest.of(from, size);
         List<Event> eventList =
             new ArrayList<>(privateEventRepository.findAllByInitiatorIdOrderByCreatedOnAsc(userId, pageable));
+        log.info("found {} events", eventList.size());
         Params params = Statistical.getParams(new ArrayList<>(eventList));
         log.info("parameters for statService created: {}", params);
         List<StatResponseDto> statResponseDto =
-            httpStatsClient.getStats(params.start(), params.end(), params.uriList(), false);
+            httpStatsClient.getStats(params.start(), params.end(), params.uriList(), true);
         long[] hitList =
             statResponseDto
                 .stream()
@@ -94,6 +95,7 @@ public class PrivateEventService {
         for (int i = 0; i < hitList.length; i++) {
             eventShortDtos.add(eventShortDtoMapper.toDto(eventList.get(i), hitList[i]));
         }
+        log.info("found {} eventShortDtos", eventShortDtos.size());
         return eventShortDtos;
     }
 
@@ -107,7 +109,7 @@ public class PrivateEventService {
         Params params = Statistical.getParams(List.of(event));
         log.info("parameters for statService created: {}", params);
         List<StatResponseDto> statResponseDto =
-            httpStatsClient.getStats(params.start(), params.end(), params.uriList(), false);
+            httpStatsClient.getStats(params.start(), params.end(), params.uriList(), true);
         return eventFullDtoMapper.toDto(event, statResponseDto.getFirst().getHits(), confirmedRequests);
     }
 
@@ -116,20 +118,35 @@ public class PrivateEventService {
         Event event =
             privateEventRepository.findByIdAndInitiatorId(eventId, userId)
                 .orElseThrow(() -> new NotFoundException("Event not found: " + eventId));
-        Long categoryId = updateEventUserRequest.getCategoryId();
-        Category category = privateCategoryRepository.findById(categoryId)
-            .orElseThrow(() -> new NotFoundException("Category not found: " + categoryId));
+        final Long categoryId = updateEventUserRequest.getCategoryId();
+        Category category;
+        if (categoryId == null) {
+            category = event.getCategory();
+        } else {
+            category = privateCategoryRepository.findById(categoryId)
+                .orElseThrow(() -> new NotFoundException("Category not found: " + categoryId));
+        }
         if (event.getState().equals(State.PUBLISHED)) {
             throw new ConflictException("You can't update a new event: " + eventId);
         }
         event = updateEventUserRequestMapper.updateEvent(updateEventUserRequest, event, category);
+        switch (updateEventUserRequest.getUserStateAction()) {
+            case null:
+                break;
+            case SEND_TO_REVIEW:
+                event.setState(State.PENDING);
+                break;
+            case CANCEL_REVIEW:
+                event.setState(State.CANCELED);
+                break;
+        }
         event = privateEventRepository.save(event);
         Long confirmedRequests =
             privateEventRepository.getRequestCountByEventAndStatus(eventId, Status.CONFIRMED).getConfirmedRequests();
         Params params = Statistical.getParams(List.of(event));
         log.info("parameters for statService created: {}", params);
         List<StatResponseDto> statResponseDto =
-            httpStatsClient.getStats(params.start(), params.end(), params.uriList(), false);
+            httpStatsClient.getStats(params.start(), params.end(), params.uriList(), true);
         Long hits = 0L;
         if (!statResponseDto.isEmpty()) {
             hits = statResponseDto.getFirst().getHits();
@@ -191,7 +208,7 @@ public class PrivateEventService {
         Set<ParticipationRequestDto> rejected;
         switch (updateRequestStatus) {
             case CONFIRMED:
-                Set<Long> confirmedRequests = statusSetMap.get(Status.CONFIRMED).keySet();
+                Set<Long> confirmedRequests = statusSetMap.getOrDefault(Status.CONFIRMED, Map.of()).keySet();
                 int confirmedSize = confirmedRequests.size();
                 int total = updateRequestIds.size() + confirmedSize;
                 if (total > participantLimit) {

@@ -1,5 +1,6 @@
 package ru.practicum.admin.service;
 
+import jakarta.validation.ConstraintViolationException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.PageRequest;
@@ -28,6 +29,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Set;
 
 @Service
 @RequiredArgsConstructor
@@ -41,6 +43,9 @@ public class AdminEventService {
 
     public List<EventFullDto> getEvents(Long[] users, String[] states, Long[] categories, LocalDateTime rangeStart,
                                         LocalDateTime rangeEnd, Integer from, Integer size) {
+        if (rangeStart != null && rangeEnd != null && rangeStart.isAfter(rangeEnd)) {
+            throw new ConstraintViolationException("Range start is after range end", Set.of());
+        }
         Pageable pageable = PageRequest.of(from, size);
         List<EventFullDto> events =
             new ArrayList<>(adminEventRepository.getEvents(users, states, categories, rangeStart, rangeEnd, pageable));
@@ -50,7 +55,7 @@ public class AdminEventService {
         Params params = Statistical.getParams(new ArrayList<>(events));
         log.info("parameters for statService created: {}", params);
         List<StatResponseDto> statResponseDto =
-            httpStatsClient.getStats(params.start(), params.end(), params.uriList(), false);
+            httpStatsClient.getStats(params.start(), params.end(), params.uriList(), true);
         long[] hitList;
         if (statResponseDto.isEmpty()) {
             hitList = new long[events.size()];
@@ -103,7 +108,7 @@ public class AdminEventService {
         Params params = Statistical.getParams(List.of(event));
         log.info("parameters for statService created: {}", params);
         List<StatResponseDto> statResponseDtoList =
-            httpStatsClient.getStats(params.start(), params.end(), params.uriList(), false);
+            httpStatsClient.getStats(params.start(), params.end(), params.uriList(), true);
         Long hits = 0L;
         if (!statResponseDtoList.isEmpty()) {
             hits = statResponseDtoList.getFirst().getHits();

@@ -84,12 +84,13 @@ public class AdminEventFullDtoRepositoryImpl implements AdminEventFullDtoReposit
             predicates.add(root.get("category").get("id").in(Arrays.asList(categories)));
         }
         LocalDateTime rangeStart = (LocalDateTime) args[3];
-        if (rangeStart != null) {
-            predicates.add(criteriaBuilder.greaterThanOrEqualTo(root.get("eventDate"), rangeStart));
-        }
         LocalDateTime rangeEnd = (LocalDateTime) args[4];
-        if (rangeEnd != null) {
-            predicates.add(criteriaBuilder.lessThanOrEqualTo(root.get("eventDate"), rangeEnd));
+        if (rangeStart != null && rangeEnd != null) {
+            predicates.add(criteriaBuilder.between(root.get("eventDate"), rangeStart, rangeEnd));
+        } else if (rangeStart != null) {
+            predicates.add(criteriaBuilder.between(root.get("eventDate"), rangeStart, LocalDateTime.now()));
+        } else {
+            predicates.add(criteriaBuilder.greaterThan(root.get("eventDate"), LocalDateTime.now()));
         }
         return predicates;
     }

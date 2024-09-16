@@ -1,6 +1,7 @@
 package ru.practicum.pub.service;
 
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.ConstraintViolationException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.PageRequest;
@@ -27,6 +28,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Set;
 
 @Service
 @RequiredArgsConstructor
@@ -39,16 +41,16 @@ public class PublicEventService {
     public EventFullDto getEvent(Long id, HttpServletRequest request) {
         Event event = publicEventRepository.findByIdAndState(id, State.PUBLISHED)
             .orElseThrow(() -> new NotFoundException("Event not found with id: " + id));
+        sendHitToStatsService(request);
         Params params = Statistical.getParams(List.of(event));
         log.info("parameters for statService created: {}", params);
         List<StatResponseDto> statResponseDtoList =
-            httpStatsClient.getStats(params.start(), params.end(), params.uriList(), false);
+            httpStatsClient.getStats(params.start(), params.end(), params.uriList(), true);
         RequestCount requestCount = publicEventRepository.getRequestCountByEventAndStatus(id, Status.CONFIRMED);
         Long hits = 0L;
         if (!statResponseDtoList.isEmpty()) {
             hits = statResponseDtoList.getFirst().getHits();
         }
-        sendHitToStatsService(request);
         return eventFullDtoMapper.toDto(event,
             requestCount.getConfirmedRequests(), hits);
     }
@@ -56,6 +58,9 @@ public class PublicEventService {
     public List<EventShortDto> getEvents(String text, Long[] categories, Boolean paid, LocalDateTime rangeStart,
                                          LocalDateTime rangeEnd, Boolean onlyAvailable, SortCriterium sort,
                                          Integer from, Integer size, HttpServletRequest request) {
+        if (rangeStart != null && rangeEnd != null && rangeStart.isAfter(rangeEnd)) {
+            throw new ConstraintViolationException("Range start is after range end", Set.of());
+        }
         Pageable pageable = PageRequest.of(from, size);
         log.info(text, categories, paid, rangeStart, rangeEnd, onlyAvailable, pageable);
         List<EventShortDto> shortDtos =
@@ -64,10 +69,11 @@ public class PublicEventService {
             sendHitToStatsService(request);
             return shortDtos;
         }
+        sendHitToStatsService(request);
         Params params = Statistical.getParams(new ArrayList<>(shortDtos));
         log.info("parameters for statService created: {}", params);
         List<StatResponseDto> statResponseDtoList =
-            httpStatsClient.getStats(params.start(), params.end(), params.uriList(), false);
+            httpStatsClient.getStats(params.start(), params.end(), params.uriList(), true);
         long[] hitList = statResponseDtoList
             .stream()
             .sorted(Comparator.comparingLong(x -> Long.parseLong(x.getUri().split("/")[2])))
@@ -87,7 +93,6 @@ public class PublicEventService {
                 shortDtos.sort(new LocalDateTimeComparator());
                 break;
         }
-        sendHitToStatsService(request);
         return shortDtos;
     }
 

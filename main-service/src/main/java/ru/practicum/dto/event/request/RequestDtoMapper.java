@@ -11,8 +11,10 @@ import java.util.Set;
 @Mapper(componentModel = MappingConstants.ComponentModel.SPRING)
 public interface RequestDtoMapper {
     @Mapping(source = "requester.id", target = "requester")
+    @Mapping(source = "event.id", target = "eventId")
     ParticipationRequestDto toParticipationRequestDto(Request request);
 
     @Mapping(source = "requester.id", target = "requester")
+    @Mapping(source = "event.id", target = "eventId")
     Set<ParticipationRequestDto> toParticipationRequestDtos(Collection<Request> requests);
 }

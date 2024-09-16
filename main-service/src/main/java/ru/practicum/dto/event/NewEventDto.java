@@ -47,6 +47,7 @@ public class NewEventDto {
     @Builder.Default
     private Boolean paid = Boolean.FALSE;
     @Builder.Default
+    @Min(0)
     private Integer participantLimit = 0;
     @Builder.Default
     private Boolean requestModeration = Boolean.TRUE;

@@ -16,6 +16,9 @@ public class EventDateTimeValidator implements ConstraintValidator<LaterThan, Lo
 
     @Override
     public boolean isValid(LocalDateTime localDateTime, ConstraintValidatorContext constraintValidatorContext) {
+        if (localDateTime == null) {
+            return true;
+        }
         return localDateTime.isAfter(earliestDateTime);
     }
 }

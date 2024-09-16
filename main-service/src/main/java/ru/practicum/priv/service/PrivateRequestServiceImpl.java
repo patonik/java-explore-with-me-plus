@@ -34,32 +34,29 @@ public class PrivateRequestServiceImpl implements PrivateRequestService {
 
     @Override
     public ParticipationRequestDto addMyRequest(Long userId, Long eventId) {
-        var optUser = userRepository.findById(userId);
-        var optEvent = eventRepository.findById(eventId);
-
-        if (optUser.isEmpty()) {
-            throw new NotFoundException(String.format("user with id %s", userId));
-        }
-        if (optEvent.isEmpty()) {
-            throw new NotFoundException(String.format("event with id %s", eventId));
-        }
-        if (requestRepository.findByRequesterIdAndEventId(userId, eventId).isPresent()) {
-            throw new ConflictException("request already exists");
-        }
-        if (eventRepository.findByIdAndInitiatorId(eventId, userId).isPresent()) {
+        var user = userRepository.findById(userId).orElseThrow(NotFoundException::new);
+        var event = eventRepository.findById(eventId).orElseThrow(NotFoundException::new);
+        if (userId.equals(event.getInitiator().getId())) {
             throw new ConflictException("""
-                    the initiator of the event cannot add a participation request for their own event.
-                    """);
+                the initiator of the event cannot add a participation request for their own event.
+                """);
         }
-
-        var user = optUser.get();
-        var event = optEvent.get();
-
         if (!event.getState().equals(State.PUBLISHED)) {
             throw new ConflictException("cannot participate in an unpublished event.");
         }
-
-        var request = new Request(null, LocalDateTime.now(), user, event, Status.PENDING);
+        if (requestRepository.existsByRequesterIdAndEventId(userId, eventId)) {
+            throw new ConflictException("request already exists");
+        }
+        long confirmedAmount = requestRepository.countByEventIdAndStatus(eventId, Status.CONFIRMED);
+        int participantLimit = event.getParticipantLimit();
+        if (participantLimit > 0 && confirmedAmount >= participantLimit) {
+            throw new ConflictException("participant limit exceeded");
+        }
+        Status status = Status.PENDING;
+        if (!event.getRequestModeration()) {
+            status = Status.CONFIRMED;
+        }
+        var request = new Request(null, LocalDateTime.now(), user, event, status);
 
         return requestMapper.toParticipationRequestDto(requestRepository.save(request));
     }
@@ -67,7 +64,7 @@ public class PrivateRequestServiceImpl implements PrivateRequestService {
     @Override
     public ParticipationRequestDto cancelMyRequest(Long userId, Long requestId) {
         var request = requestRepository.findByIdAndRequesterId(requestId, userId).orElseThrow(
-                () -> new NotFoundException(String.format("request with id %s", requestId)));
+            () -> new NotFoundException(String.format("request with id %s", requestId)));
         request.setStatus(Status.REJECTED);
         return requestMapper.toParticipationRequestDto(request);
     }

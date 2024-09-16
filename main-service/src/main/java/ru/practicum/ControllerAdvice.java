@@ -30,8 +30,8 @@ public class ControllerAdvice {
         errors = fillErrors(errors, e.getCause());
         Set<ConstraintViolation<?>> constraintViolations = e.getConstraintViolations();
         StringJoiner reason = new StringJoiner(", ");
-        for (ConstraintViolation<?> constraintViolation : constraintViolations) {
-            reason.add(constraintViolation.getMessage());
+        if (constraintViolations != null) {
+            constraintViolations.forEach(x -> reason.add(x.getMessage()));
         }
         return ApiError.builder()
             .errors(errors)
