@@ -53,7 +53,7 @@ public class PrivateRequestServiceImpl implements PrivateRequestService {
             throw new ConflictException("participant limit exceeded");
         }
         Status status = Status.PENDING;
-        if (!event.getRequestModeration()) {
+        if (!event.getRequestModeration() || participantLimit == 0) {
             status = Status.CONFIRMED;
         }
         var request = new Request(null, LocalDateTime.now(), user, event, status);

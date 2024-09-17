@@ -26,10 +26,11 @@ import ru.practicum.util.Statistical;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -54,23 +55,19 @@ public class AdminEventService {
         }
         Params params = Statistical.getParams(new ArrayList<>(events));
         log.info("parameters for statService created: {}", params);
-        List<StatResponseDto> statResponseDto =
+        List<StatResponseDto> statResponseDtoList =
             httpStatsClient.getStats(params.start(), params.end(), params.uriList(), true);
-        long[] hitList;
-        if (statResponseDto.isEmpty()) {
-            hitList = new long[events.size()];
-            Arrays.fill(hitList, 0L);
-        } else {
-            hitList =
-                statResponseDto
-                    .stream()
-                    .sorted(Comparator.comparingLong(x -> Long.parseLong(x.getUri().split("/")[2])))
-                    .mapToLong(StatResponseDto::getHits)
-                    .toArray();
-            events.sort(Comparator.comparingLong(EventFullDto::getId));
-        }
-        for (int i = 0; i < hitList.length; i++) {
-            events.get(i).setViews(hitList[i]);
+        Map<Long, Long> hitMap = statResponseDtoList
+            .stream()
+            .collect(Collectors.toMap(x -> Long.parseLong(x.getUri().split("/")[2]), StatResponseDto::getHits));
+        events.sort(Comparator.comparingLong(EventFullDto::getId));
+        for (EventFullDto eventFullDto : events) {
+            long hits = 0L;
+            Long eventId = eventFullDto.getId();
+            if (!hitMap.isEmpty() && hitMap.containsKey(eventId)) {
+                hits = hitMap.get(eventId);
+            }
+            eventFullDto.setViews(hits);
         }
         return events;
     }
@@ -101,6 +98,7 @@ public class AdminEventService {
                 break;
             case REJECT_EVENT:
                 event.setState(State.CANCELED);
+                log.info("event state changed to {}", event.getState());
                 break;
         }
         event = adminEventRepository.save(event);

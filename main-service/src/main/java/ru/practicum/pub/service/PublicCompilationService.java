@@ -19,6 +19,7 @@ import ru.practicum.util.Statistical;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
@@ -43,14 +44,17 @@ public class PublicCompilationService {
         log.info("parameters for statService created: {}", params);
         List<StatResponseDto> statResponseDtoList =
             httpStatsClient.getStats(params.start(), params.end(), params.uriList(), true);
-        long[] hitList = statResponseDtoList
+        Map<Long, Long> hitMap = statResponseDtoList
             .stream()
-            .sorted(Comparator.comparingLong(x -> Long.parseLong(x.getUri().split("/")[2])))
-            .mapToLong(StatResponseDto::getHits)
-            .toArray();
-        shortDtos.sort(Comparator.comparingLong(Statistical::getId));
-        for (int i = 0; i < hitList.length; i++) {
-            shortDtos.get(i).setViews(hitList[i]);
+            .collect(Collectors.toMap(x -> Long.parseLong(x.getUri().split("/")[2]), StatResponseDto::getHits));
+        shortDtos.sort(Comparator.comparingLong(EventShortDto::getId));
+        for (EventShortDto eventShortDto : shortDtos) {
+            long hits = 0L;
+            Long eventId = eventShortDto.getId();
+            if (!hitMap.isEmpty() && hitMap.containsKey(eventId)) {
+                hits = hitMap.get(eventId);
+            }
+            eventShortDto.setViews(hits);
         }
         return allCompilationDtos;
     }

@@ -12,8 +12,10 @@ import ru.practicum.HttpStatsClient;
 import ru.practicum.admin.repository.AdminCategoryRepository;
 import ru.practicum.admin.repository.AdminEventRepository;
 import ru.practicum.dto.StatResponseDto;
+import ru.practicum.dto.event.AdminStateAction;
 import ru.practicum.dto.event.EventFullDto;
 import ru.practicum.dto.event.EventFullDtoMapper;
+import ru.practicum.dto.event.State;
 import ru.practicum.dto.event.UpdateEventAdminRequest;
 import ru.practicum.dto.event.UpdateEventAdminRequestMapper;
 import ru.practicum.dto.event.request.RequestCount;
@@ -29,6 +31,7 @@ import java.util.Optional;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.anyLong;
 import static org.mockito.Mockito.eq;
@@ -70,15 +73,18 @@ class AdminEventServiceTest {
         event = new Event();
         event.setId(1L);
         event.setCreatedOn(LocalDateTime.now());
+        event.setState(State.PENDING);
 
         category = new Category();
         category.setId(1L);
 
         adminRequest = new UpdateEventAdminRequest();
         adminRequest.setCategoryId(1L);
+        adminRequest.setStateAction(AdminStateAction.REJECT_EVENT);
 
         eventFullDto = new EventFullDto();
-        eventFullDto.setCreatedOn(LocalDateTime.now());
+        eventFullDto.setCreatedOn(event.getCreatedOn());
+        event.setId(event.getId());
     }
 
     @AfterEach
@@ -119,18 +125,23 @@ class AdminEventServiceTest {
         when(adminEventRepository.findById(anyLong())).thenReturn(Optional.of(event));
         when(categoryRepository.findById(anyLong())).thenReturn(Optional.of(category));
         when(updateEventAdminRequestMapper.updateEvent(any(), any(), any())).thenReturn(event);
-        when(adminEventRepository.save(any(Event.class))).thenReturn(event);
+        when(adminEventRepository.save(event)).thenReturn(event);
         when(adminEventRepository.getRequestCountByEventAndStatus(anyLong(), eq(Status.CONFIRMED)))
             .thenReturn(new RequestCount(100L));
-        when(eventFullDtoMapper.toDto(any(Event.class), anyLong(), anyLong())).thenReturn(eventFullDto);
+        when(eventFullDtoMapper.toDto(eq(event), anyLong(), anyLong())).thenReturn(eventFullDto);
         when(httpStatsClient.getStats(any(), any(), any(), any())).thenReturn(
             List.of(new StatResponseDto("", "", 10L)));
 
         // Call the method
         EventFullDto result = adminEventService.updateEvent(1L, adminRequest);
+        result.setState(event.getState());
 
         // Verify the result and interactions
         assertNotNull(result);
+        AdminStateAction stateAction = adminRequest.getStateAction();
+        State state = result.getState();
+        assertTrue(stateAction.equals(AdminStateAction.REJECT_EVENT) ? state.equals(State.CANCELED) :
+            state.equals(State.PUBLISHED));
         verify(adminEventRepository).findById(anyLong());
         verify(categoryRepository).findById(anyLong());
         verify(updateEventAdminRequestMapper).updateEvent(any(), any(), any());

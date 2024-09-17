@@ -144,7 +144,7 @@ class AdminCompilationServiceTest {
         // Mock finding compilation and saving the updated one
         when(adminCompilationRepository.findById(anyLong())).thenReturn(Optional.of(compilation));
         when(adminCompilationRepository.save(any(Compilation.class))).thenReturn(compilation);
-        when(compilationDtoMapper.updateCompilation(any(), any())).thenReturn(compilation);
+        when(compilationDtoMapper.updateCompilation(any(), any(), any())).thenReturn(compilation);
         when(compilationDtoMapper.toCompilationDto(any(Compilation.class))).thenReturn(compilationDto);
 
         // Call the method

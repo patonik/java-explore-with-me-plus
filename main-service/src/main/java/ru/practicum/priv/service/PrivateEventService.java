@@ -84,16 +84,18 @@ public class PrivateEventService {
         log.info("parameters for statService created: {}", params);
         List<StatResponseDto> statResponseDto =
             httpStatsClient.getStats(params.start(), params.end(), params.uriList(), true);
-        long[] hitList =
-            statResponseDto
-                .stream()
-                .sorted(Comparator.comparingLong(x -> Long.parseLong(x.getUri().split("/")[2])))
-                .mapToLong(StatResponseDto::getHits)
-                .toArray();
+        Map<Long, Long> hitMap = statResponseDto
+            .stream()
+            .collect(Collectors.toMap(x -> Long.parseLong(x.getUri().split("/")[2]), StatResponseDto::getHits));
         eventList.sort(Comparator.comparingLong(Event::getId));
         List<EventShortDto> eventShortDtos = new ArrayList<>();
-        for (int i = 0; i < hitList.length; i++) {
-            eventShortDtos.add(eventShortDtoMapper.toDto(eventList.get(i), hitList[i]));
+        for (Event event : eventList) {
+            long hits = 0L;
+            Long eventId = event.getId();
+            if (!hitMap.isEmpty() && hitMap.containsKey(eventId)) {
+                hits = hitMap.get(eventId);
+            }
+            eventShortDtos.add(eventShortDtoMapper.toDto(event, hits));
         }
         log.info("found {} eventShortDtos", eventShortDtos.size());
         return eventShortDtos;
@@ -135,6 +137,7 @@ public class PrivateEventService {
                 break;
             case SEND_TO_REVIEW:
                 event.setState(State.PENDING);
+                log.info("event state updated to {}", event.getState());
                 break;
             case CANCEL_REVIEW:
                 event.setState(State.CANCELED);
@@ -151,7 +154,9 @@ public class PrivateEventService {
         if (!statResponseDto.isEmpty()) {
             hits = statResponseDto.getFirst().getHits();
         }
-        return eventFullDtoMapper.toDto(event, hits, confirmedRequests);
+        EventFullDto dto = eventFullDtoMapper.toDto(event, hits, confirmedRequests);
+        log.info("eventFullDto state returned: {}", dto.getState());
+        return dto;
     }
 
     public List<ParticipationRequestDto> getMyEventRequests(Long userId, Long eventId) {

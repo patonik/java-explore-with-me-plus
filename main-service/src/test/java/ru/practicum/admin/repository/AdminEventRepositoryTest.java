@@ -23,6 +23,7 @@ import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @DataJpaTest
 @ActiveProfiles("test")
@@ -110,5 +111,11 @@ class AdminEventRepositoryTest {
         assertThat(eventFullDtos).hasSize(1);
         System.out.println(eventFullDtos.getFirst().getCategory().getId());
         assertThat(eventFullDtos.getFirst().getTitle()).isEqualTo(title);
+    }
+
+    @Test
+    void save() {
+        event.setState(State.CANCELED);
+        assertEquals(event.getState(), adminEventRepository.save(event).getState());
     }
 }

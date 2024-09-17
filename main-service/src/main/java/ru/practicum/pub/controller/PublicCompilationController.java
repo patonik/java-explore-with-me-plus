@@ -23,11 +23,10 @@ public class PublicCompilationController {
      * В случае, если по заданным фильтрам не найдено ни одной подборки, возвращает пустой список
      */
     @GetMapping
-    public ResponseEntity<List<CompilationDto>> getCompilations(@RequestParam Boolean pinned,
-                                                                @RequestParam(required = false, defaultValue = "0")
-                                                                Integer from,
-                                                                @RequestParam(required = false, defaultValue = "10")
-                                                                Integer size) {
+    public ResponseEntity<List<CompilationDto>> getCompilations(
+        @RequestParam(required = false, defaultValue = "false") Boolean pinned,
+        @RequestParam(required = false, defaultValue = "0") Integer from,
+        @RequestParam(required = false, defaultValue = "10") Integer size) {
 
         return new ResponseEntity<>(publicCompilationService.getCompilations(pinned, from, size), HttpStatus.OK);
     }

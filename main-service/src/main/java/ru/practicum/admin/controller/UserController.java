@@ -34,7 +34,7 @@ public class UserController {
      * В случае, если по заданным фильтрам не найдено ни одного пользователя, возвращает пустой список.
      */
     @GetMapping
-    public ResponseEntity<List<UserDto>> getUsers(@RequestParam Long[] ids,
+    public ResponseEntity<List<UserDto>> getUsers(@RequestParam(required = false) Long[] ids,
                                                   @RequestParam(required = false,
                                                       defaultValue = DataTransferConvention.FROM)
                                                   Integer from,
