@@ -3,7 +3,6 @@ package ru.practicum.priv.repository;
 import org.springframework.data.domain.Pageable;
 import ru.practicum.dto.event.EventShortDto;
 
-import java.time.LocalDateTime;
 import java.util.List;
 
 public interface PrivateEventShortDtoRepository {

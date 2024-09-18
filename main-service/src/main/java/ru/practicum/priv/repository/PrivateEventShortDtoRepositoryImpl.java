@@ -2,7 +2,12 @@ package ru.practicum.priv.repository;
 
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
-import jakarta.persistence.criteria.*;
+import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.persistence.criteria.CriteriaQuery;
+import jakarta.persistence.criteria.Join;
+import jakarta.persistence.criteria.Predicate;
+import jakarta.persistence.criteria.Root;
+import jakarta.persistence.criteria.Subquery;
 import org.springframework.data.domain.Pageable;
 import ru.practicum.dto.category.CategoryDto;
 import ru.practicum.dto.event.EventShortDto;
@@ -13,7 +18,6 @@ import ru.practicum.model.Event;
 import ru.practicum.model.Request;
 import ru.practicum.model.User;
 
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
