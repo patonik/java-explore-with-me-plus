@@ -12,5 +12,6 @@ public interface ServiceHitMapper {
     StatRequestDto toDto(ServiceHit serviceHit);
 
     @Mapping(target = "created", source = "timestamp")
+    @Mapping(target = "id", ignore = true)
     ServiceHit toEntity(StatRequestDto statRequestDto);
 }

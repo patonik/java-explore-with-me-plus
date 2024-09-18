@@ -1,13 +1,6 @@
 package ru.practicum.model;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.OneToMany;
-import jakarta.persistence.SequenceGenerator;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -30,8 +23,10 @@ public class Compilation {
     private Long id;
     private Boolean pinned;
     private String title;
-    @OneToMany(targetEntity = Event.class)
-    @JoinColumn(name = "EVENT_ID", referencedColumnName = "ID")
+    @OneToMany()
+    @JoinTable(name = "COMP_EVENT", joinColumns = {
+            @JoinColumn(name = "COMPILATION_ID", referencedColumnName = "ID")},
+            inverseJoinColumns = {@JoinColumn(name = "EVENT_ID", referencedColumnName = "ID")})
     private Set<Event> events = new HashSet<>();
 
     public void addEvent(Event event) {
@@ -53,10 +48,10 @@ public class Compilation {
     @Override
     public String toString() {
         return "Compilation{" +
-            "id=" + id +
-            ", pinned=" + pinned +
-            ", title='" + title + '\'' +
-            '}';
+                "id=" + id +
+                ", pinned=" + pinned +
+                ", title='" + title + '\'' +
+                '}';
     }
 
     @Override

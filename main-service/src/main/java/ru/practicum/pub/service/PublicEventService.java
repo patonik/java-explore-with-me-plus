@@ -44,17 +44,19 @@ public class PublicEventService {
         Event event = publicEventRepository.findByIdAndState(id, State.PUBLISHED)
             .orElseThrow(() -> new NotFoundException("Event not found with id: " + id));
         sendHitToStatsService(request);
-        Params params = Statistical.getParams(List.of(event));
+        RequestCount requestCount = publicEventRepository.getRequestCountByEventAndStatus(id, Status.CONFIRMED);
+        EventFullDto eventFullDto = eventFullDtoMapper.toDto(event,
+                requestCount.getConfirmedRequests(), 0L);
+        Params params = Statistical.getParams(List.of(eventFullDto));
         log.info("parameters for statService created: {}", params);
         List<StatResponseDto> statResponseDtoList =
             httpStatsClient.getStats(params.start(), params.end(), params.uriList(), true);
-        RequestCount requestCount = publicEventRepository.getRequestCountByEventAndStatus(id, Status.CONFIRMED);
         Long hits = 0L;
         if (!statResponseDtoList.isEmpty()) {
             hits = statResponseDtoList.getFirst().getHits();
         }
-        return eventFullDtoMapper.toDto(event,
-            requestCount.getConfirmedRequests(), hits);
+        eventFullDto.setViews(hits);
+        return eventFullDto;
     }
 
     public List<EventShortDto> getEvents(String text, Long[] categories, Boolean paid, LocalDateTime rangeStart,

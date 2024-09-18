@@ -29,28 +29,28 @@ public class AdminEventFullDtoRepositoryImpl implements AdminEventFullDtoReposit
     public List<EventFullDto> getEvents(Long[] users, String[] states, Long[] categories, LocalDateTime rangeStart,
                                         LocalDateTime rangeEnd, Pageable pageable) {
         Object[] params = new Object[] {users, states, categories, rangeStart, rangeEnd};
-        CriteriaBuilder criteriaBuilder = em.getCriteriaBuilder();
-        CriteriaQuery<EventFullDto> criteriaQuery = criteriaBuilder.createQuery(EventFullDto.class);
-        Root<Event> root = criteriaQuery.from(Event.class);
-        Subquery<Long> subquery = criteriaQuery.subquery(Long.class);
+        CriteriaBuilder cb = em.getCriteriaBuilder();
+        CriteriaQuery<EventFullDto> cq = cb.createQuery(EventFullDto.class);
+        Root<Event> root = cq.from(Event.class);
+        Subquery<Long> subquery = cq.subquery(Long.class);
         Root<Request> subRoot = subquery.from(Request.class);
-        subquery.select(criteriaBuilder.count(subRoot.get("id")));
+        subquery.select(cb.count(subRoot.get("id")));
         subquery.where(
-            criteriaBuilder.equal(subRoot.get("event").get("id"), root.get("id")),
-            criteriaBuilder.equal(subRoot.get("status"), Status.CONFIRMED)
+            cb.equal(subRoot.get("event").get("id"), root.get("id")),
+            cb.equal(subRoot.get("status"), Status.CONFIRMED)
         );
 
-        List<Predicate> predicates = getPredicates(criteriaBuilder, root, params);
-        criteriaQuery.select(criteriaBuilder.construct(EventFullDto.class,
+        List<Predicate> predicates = getPredicates(cb, root, params);
+        cq.select(cb.construct(EventFullDto.class,
             root.get("id"),
             root.get("annotation"),
-            criteriaBuilder.construct(CategoryDto.class, root.get("category").get("id"),
+            cb.construct(CategoryDto.class, root.get("category").get("id"),
                 root.get("category").get("name")),
             root.get("createdOn"),
             root.get("publishedOn"),
             root.get("description"),
             root.get("eventDate"),
-            criteriaBuilder.construct(UserShortDto.class, root.get("initiator").get("id"),
+            cb.construct(UserShortDto.class, root.get("initiator").get("id"),
                 root.get("initiator").get("name")),
             root.get("location"),
             root.get("paid"),
@@ -59,12 +59,12 @@ public class AdminEventFullDtoRepositoryImpl implements AdminEventFullDtoReposit
             root.get("title"),
             root.get("state"),
             subquery.getSelection(),
-            criteriaBuilder.nullLiteral(Long.class))
+            cb.nullLiteral(Long.class))
         );
-        criteriaQuery.where(predicates.toArray(new Predicate[0]));
+        cq.where(predicates.toArray(new Predicate[0]));
         int pageSize = pageable.getPageSize();
         TypedQuery<EventFullDto> eventFullDtoTypedQuery =
-            em.createQuery(criteriaQuery).setFirstResult(pageable.getPageNumber() * pageSize)
+            em.createQuery(cq).setFirstResult(pageable.getPageNumber() * pageSize)
                 .setMaxResults(pageSize);
         return eventFullDtoTypedQuery.getResultList();
     }

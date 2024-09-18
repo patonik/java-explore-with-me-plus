@@ -24,28 +24,28 @@ public class HitListElementRepositoryImpl implements HitListElementRepository {
                                                        LocalDateTime end,
                                                        String[] uris,
                                                        boolean unique) {
-        CriteriaBuilder criteriaBuilder = em.getCriteriaBuilder();
-        CriteriaQuery<StatResponseDto> criteriaQuery = criteriaBuilder.createQuery(StatResponseDto.class);
-        Root<ServiceHit> root = criteriaQuery.from(ServiceHit.class);
+        CriteriaBuilder cb = em.getCriteriaBuilder();
+        CriteriaQuery<StatResponseDto> cq = cb.createQuery(StatResponseDto.class);
+        Root<ServiceHit> root = cq.from(ServiceHit.class);
         List<Predicate> predicates = new ArrayList<>();
-        Predicate datePredicate = criteriaBuilder.between(root.get("created"), start, end);
+        Predicate datePredicate = cb.between(root.get("created"), start, end);
         predicates.add(datePredicate);
         if (uris != null && uris.length > 0) {
             Predicate uriPredicate = root.get("uri").in(Arrays.asList(uris));
             predicates.add(uriPredicate);
         }
         Expression<Long> hitCountExpression = unique
-            ? criteriaBuilder.countDistinct(root.get("ip"))
-            : criteriaBuilder.count(root.get("ip"));
-        criteriaQuery.select(criteriaBuilder.construct(
+            ? cb.countDistinct(root.get("ip"))
+            : cb.count(root.get("ip"));
+        cq.select(cb.construct(
             StatResponseDto.class,
             root.get("app"),
             root.get("uri"),
             hitCountExpression
         ));
-        criteriaQuery.where(predicates.toArray(new Predicate[0]))
+        cq.where(predicates.toArray(new Predicate[0]))
             .groupBy(root.get("app"), root.get("uri"))
-            .orderBy(criteriaBuilder.desc(hitCountExpression));
-        return em.createQuery(criteriaQuery).getResultList();
+            .orderBy(cb.desc(hitCountExpression));
+        return em.createQuery(cq).getResultList();
     }
 }

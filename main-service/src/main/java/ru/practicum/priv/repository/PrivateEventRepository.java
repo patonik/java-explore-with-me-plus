@@ -13,7 +13,7 @@ import java.util.Optional;
 
 
 @Repository
-public interface PrivateEventRepository extends JpaRepository<Event, Long> {
+public interface PrivateEventRepository extends JpaRepository<Event, Long>, PrivateEventShortDtoRepository {
     @Query("""
         select new ru.practicum.dto.event.request.RequestCount(count(r.id))
         from Request r

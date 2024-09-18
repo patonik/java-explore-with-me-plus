@@ -1,5 +1,6 @@
 package ru.practicum.dto.compilation;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
@@ -16,6 +17,7 @@ import java.util.Set;
 @Builder
 public class NewCompilationDto {
     @Builder.Default
+    @JsonProperty("events")
     private Set<Long> eventIds = new HashSet<>();
     @Builder.Default
     private Boolean pinned = false;

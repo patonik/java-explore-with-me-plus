@@ -6,11 +6,11 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import ru.practicum.util.Statistical;
 import ru.practicum.dto.category.CategoryDto;
 import ru.practicum.dto.user.UserShortDto;
 import ru.practicum.json.LocalDateTimeDeserializer;
 import ru.practicum.json.LocalDateTimeSerializer;
+import ru.practicum.util.Statistical;
 
 import java.time.LocalDateTime;
 

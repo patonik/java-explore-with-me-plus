@@ -11,13 +11,10 @@ import ru.practicum.HttpStatsClient;
 import ru.practicum.admin.repository.AdminCategoryRepository;
 import ru.practicum.admin.repository.AdminEventRepository;
 import ru.practicum.dto.StatResponseDto;
-import ru.practicum.dto.event.EventFullDto;
-import ru.practicum.dto.event.EventFullDtoMapper;
-import ru.practicum.dto.event.State;
-import ru.practicum.dto.event.UpdateEventAdminRequest;
-import ru.practicum.dto.event.UpdateEventAdminRequestMapper;
+import ru.practicum.dto.event.*;
 import ru.practicum.dto.event.request.RequestCount;
 import ru.practicum.dto.event.request.Status;
+import ru.practicum.exception.ConflictException;
 import ru.practicum.exception.NotFoundException;
 import ru.practicum.model.Category;
 import ru.practicum.model.Event;
@@ -49,17 +46,17 @@ public class AdminEventService {
         }
         Pageable pageable = PageRequest.of(from, size);
         List<EventFullDto> events =
-            new ArrayList<>(adminEventRepository.getEvents(users, states, categories, rangeStart, rangeEnd, pageable));
+                new ArrayList<>(adminEventRepository.getEvents(users, states, categories, rangeStart, rangeEnd, pageable));
         if (events.isEmpty()) {
             return events;
         }
         Params params = Statistical.getParams(new ArrayList<>(events));
         log.info("parameters for statService created: {}", params);
         List<StatResponseDto> statResponseDtoList =
-            httpStatsClient.getStats(params.start(), params.end(), params.uriList(), true);
+                httpStatsClient.getStats(params.start(), params.end(), params.uriList(), true);
         Map<Long, Long> hitMap = statResponseDtoList
-            .stream()
-            .collect(Collectors.toMap(x -> Long.parseLong(x.getUri().split("/")[2]), StatResponseDto::getHits));
+                .stream()
+                .collect(Collectors.toMap(x -> Long.parseLong(x.getUri().split("/")[2]), StatResponseDto::getHits));
         events.sort(Comparator.comparingLong(EventFullDto::getId));
         for (EventFullDto eventFullDto : events) {
             long hits = 0L;
@@ -75,18 +72,21 @@ public class AdminEventService {
     @Transactional
     public EventFullDto updateEvent(Long eventId, UpdateEventAdminRequest adminRequest) {
         Event event =
-            adminEventRepository.findById(eventId).orElseThrow(() -> new NotFoundException("Event not found"));
+                adminEventRepository.findById(eventId).orElseThrow(() -> new NotFoundException("Event not found"));
+        if (!event.getState().equals(State.PENDING)) {
+            throw new ConflictException("cannot publish twice");
+        }
         Long categoryId = adminRequest.getCategoryId();
         Category category;
         if (categoryId != null) {
             category =
-                categoryRepository.findById(categoryId).orElseThrow(() -> new NotFoundException("Category not found"));
+                    categoryRepository.findById(categoryId).orElseThrow(() -> new NotFoundException("Category not found"));
         } else {
             category = event.getCategory();
         }
         log.info("updating event: {}", event);
         event = updateEventAdminRequestMapper.updateEvent(adminRequest, event,
-            category);
+                category);
         log.info("updated event: {}", event);
         log.info("saving...");
         switch (adminRequest.getStateAction()) {
@@ -103,15 +103,17 @@ public class AdminEventService {
         }
         event = adminEventRepository.save(event);
         RequestCount requestCount = adminEventRepository.getRequestCountByEventAndStatus(eventId, Status.CONFIRMED);
-        Params params = Statistical.getParams(List.of(event));
+        EventFullDto eventFullDto = eventFullDtoMapper.toDto(event, 0L,
+                requestCount.getConfirmedRequests());
+        Params params = Statistical.getParams(List.of(eventFullDto));
         log.info("parameters for statService created: {}", params);
         List<StatResponseDto> statResponseDtoList =
-            httpStatsClient.getStats(params.start(), params.end(), params.uriList(), true);
+                httpStatsClient.getStats(params.start(), params.end(), params.uriList(), true);
         Long hits = 0L;
         if (!statResponseDtoList.isEmpty()) {
             hits = statResponseDtoList.getFirst().getHits();
         }
-        return eventFullDtoMapper.toDto(event, hits,
-            requestCount.getConfirmedRequests());
+        eventFullDto.setViews(hits);
+        return eventFullDto;
     }
 }

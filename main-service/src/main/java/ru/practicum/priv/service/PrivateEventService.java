@@ -8,20 +8,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.HttpStatsClient;
 import ru.practicum.dto.StatResponseDto;
-import ru.practicum.dto.event.EventFullDto;
-import ru.practicum.dto.event.EventFullDtoMapper;
-import ru.practicum.dto.event.EventShortDto;
-import ru.practicum.dto.event.EventShortDtoMapper;
-import ru.practicum.dto.event.NewEventDto;
-import ru.practicum.dto.event.NewEventDtoMapper;
-import ru.practicum.dto.event.State;
-import ru.practicum.dto.event.UpdateEventUserRequest;
-import ru.practicum.dto.event.UpdateEventUserRequestMapper;
-import ru.practicum.dto.event.request.EventRequestStatusUpdateRequest;
-import ru.practicum.dto.event.request.EventRequestStatusUpdateResult;
-import ru.practicum.dto.event.request.ParticipationRequestDto;
-import ru.practicum.dto.event.request.RequestDtoMapper;
-import ru.practicum.dto.event.request.Status;
+import ru.practicum.dto.event.*;
+import ru.practicum.dto.event.request.*;
 import ru.practicum.exception.ConflictException;
 import ru.practicum.exception.NotFoundException;
 import ru.practicum.model.Category;
@@ -35,13 +23,7 @@ import ru.practicum.priv.repository.RequestRepository;
 import ru.practicum.util.Params;
 import ru.practicum.util.Statistical;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -63,10 +45,10 @@ public class PrivateEventService {
     @Transactional
     public EventFullDto addEvent(Long userId, NewEventDto newEventDto) {
         User initiator =
-            privateUserRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("Not authorized to add new event"));
+                privateUserRepository.findById(userId)
+                        .orElseThrow(() -> new RuntimeException("Not authorized to add new event"));
         Category category = privateCategoryRepository.findById(newEventDto.getCategoryId())
-            .orElseThrow(() -> new RuntimeException("No such category"));
+                .orElseThrow(() -> new RuntimeException("No such category"));
         Event event = newEventDtoMapper.toEvent(newEventDto, initiator, category, State.PENDING);
         event = privateEventRepository.save(event);
         Long confirmedRequests = 0L;
@@ -77,25 +59,24 @@ public class PrivateEventService {
     @Transactional(readOnly = true)
     public List<EventShortDto> getMyEvents(Long userId, Integer from, Integer size) {
         Pageable pageable = PageRequest.of(from, size);
-        List<Event> eventList =
-            new ArrayList<>(privateEventRepository.findAllByInitiatorIdOrderByCreatedOnAsc(userId, pageable));
-        log.info("found {} events", eventList.size());
-        Params params = Statistical.getParams(new ArrayList<>(eventList));
+        List<EventShortDto> eventShortDtos = privateEventRepository.getEvents(userId, pageable);
+        log.info("found {} events", eventShortDtos.size());
+        Params params = Statistical.getParams(new ArrayList<>(eventShortDtos));
         log.info("parameters for statService created: {}", params);
         List<StatResponseDto> statResponseDto =
-            httpStatsClient.getStats(params.start(), params.end(), params.uriList(), true);
+                httpStatsClient.getStats(params.start(), params.end(), params.uriList(), true);
         Map<Long, Long> hitMap = statResponseDto
-            .stream()
-            .collect(Collectors.toMap(x -> Long.parseLong(x.getUri().split("/")[2]), StatResponseDto::getHits));
-        eventList.sort(Comparator.comparingLong(Event::getId));
-        List<EventShortDto> eventShortDtos = new ArrayList<>();
-        for (Event event : eventList) {
+                .stream()
+                .collect(Collectors.toMap(x -> Long.parseLong(x.getUri().split("/")[2]), StatResponseDto::getHits));
+        eventShortDtos.sort(Comparator.comparingLong(EventShortDto::getId));
+        boolean empty = hitMap.isEmpty();
+        for (EventShortDto eventShortDto : eventShortDtos) {
             long hits = 0L;
-            Long eventId = event.getId();
-            if (!hitMap.isEmpty() && hitMap.containsKey(eventId)) {
+            Long eventId = eventShortDto.getId();
+            if (!empty && hitMap.containsKey(eventId)) {
                 hits = hitMap.get(eventId);
             }
-            eventShortDtos.add(eventShortDtoMapper.toDto(event, hits));
+            eventShortDto.setViews(hits);
         }
         log.info("found {} eventShortDtos", eventShortDtos.size());
         return eventShortDtos;
@@ -104,35 +85,44 @@ public class PrivateEventService {
     @Transactional(readOnly = true)
     public EventFullDto getMyEvent(Long userId, Long eventId) {
         Event event =
-            privateEventRepository.findByIdAndInitiatorId(eventId, userId)
-                .orElseThrow(() -> new NotFoundException("Event not found: " + eventId));
+                privateEventRepository.findByIdAndInitiatorId(eventId, userId)
+                        .orElseThrow(() -> new NotFoundException("Event not found: " + eventId));
         Long confirmedRequests =
-            privateEventRepository.getRequestCountByEventAndStatus(eventId, Status.CONFIRMED).getConfirmedRequests();
-        Params params = Statistical.getParams(List.of(event));
+                privateEventRepository.getRequestCountByEventAndStatus(eventId, Status.CONFIRMED).getConfirmedRequests();
+        EventFullDto eventFullDto = eventFullDtoMapper.toDto(event, 0L, confirmedRequests);
+        Params params = Statistical.getParams(List.of(eventFullDto));
         log.info("parameters for statService created: {}", params);
-        List<StatResponseDto> statResponseDto =
-            httpStatsClient.getStats(params.start(), params.end(), params.uriList(), true);
-        return eventFullDtoMapper.toDto(event, statResponseDto.getFirst().getHits(), confirmedRequests);
+        List<StatResponseDto> statResponseDtos =
+                httpStatsClient.getStats(params.start(), params.end(), params.uriList(), true);
+        if (!statResponseDtos.isEmpty()) {
+            eventFullDto.setViews(statResponseDtos.getFirst().getHits());
+        }
+        return eventFullDto;
     }
 
     @Transactional
     public EventFullDto updateMyEvent(Long userId, Long eventId, UpdateEventUserRequest updateEventUserRequest) {
         Event event =
-            privateEventRepository.findByIdAndInitiatorId(eventId, userId)
-                .orElseThrow(() -> new NotFoundException("Event not found: " + eventId));
+                privateEventRepository.findByIdAndInitiatorId(eventId, userId)
+                        .orElseThrow(() -> new NotFoundException("Event not found: " + eventId));
+        if (!event.getState().equals(State.PENDING)) {
+            throw new ConflictException("cannot modify in current state");
+        }
         final Long categoryId = updateEventUserRequest.getCategoryId();
         Category category;
         if (categoryId == null) {
             category = event.getCategory();
         } else {
             category = privateCategoryRepository.findById(categoryId)
-                .orElseThrow(() -> new NotFoundException("Category not found: " + categoryId));
+                    .orElseThrow(() -> new NotFoundException("Category not found: " + categoryId));
         }
         if (event.getState().equals(State.PUBLISHED)) {
             throw new ConflictException("You can't update a new event: " + eventId);
         }
         event = updateEventUserRequestMapper.updateEvent(updateEventUserRequest, event, category);
-        switch (updateEventUserRequest.getUserStateAction()) {
+        UserStateAction userStateAction = updateEventUserRequest.getUserStateAction();
+        log.info("userStateAction value: {}", userStateAction);
+        switch (userStateAction) {
             case null:
                 break;
             case SEND_TO_REVIEW:
@@ -145,23 +135,24 @@ public class PrivateEventService {
         }
         event = privateEventRepository.save(event);
         Long confirmedRequests =
-            privateEventRepository.getRequestCountByEventAndStatus(eventId, Status.CONFIRMED).getConfirmedRequests();
-        Params params = Statistical.getParams(List.of(event));
+                privateEventRepository.getRequestCountByEventAndStatus(eventId, Status.CONFIRMED).getConfirmedRequests();
+        EventFullDto dto = eventFullDtoMapper.toDto(event, 0L, confirmedRequests);
+        Params params = Statistical.getParams(List.of(dto));
         log.info("parameters for statService created: {}", params);
         List<StatResponseDto> statResponseDto =
-            httpStatsClient.getStats(params.start(), params.end(), params.uriList(), true);
+                httpStatsClient.getStats(params.start(), params.end(), params.uriList(), true);
         Long hits = 0L;
         if (!statResponseDto.isEmpty()) {
             hits = statResponseDto.getFirst().getHits();
         }
-        EventFullDto dto = eventFullDtoMapper.toDto(event, hits, confirmedRequests);
+        dto.setViews(hits);
         log.info("eventFullDto state returned: {}", dto.getState());
         return dto;
     }
 
     public List<ParticipationRequestDto> getMyEventRequests(Long userId, Long eventId) {
         boolean exists =
-            privateEventRepository.existsByIdAndInitiatorId(eventId, userId);
+                privateEventRepository.existsByIdAndInitiatorId(eventId, userId);
         if (!exists) {
             throw new NotFoundException("Event not found: " + eventId);
         }
@@ -182,30 +173,32 @@ public class PrivateEventService {
     public EventRequestStatusUpdateResult updateMyEventRequests(Long userId, Long eventId,
                                                                 EventRequestStatusUpdateRequest updateRequest) {
         Event event =
-            privateEventRepository.findByIdAndInitiatorId(eventId, userId)
-                .orElseThrow(() -> new NotFoundException("Event not found: " + eventId));
+                privateEventRepository.findByIdAndInitiatorId(eventId, userId)
+                        .orElseThrow(() -> new NotFoundException("Event not found: " + eventId));
 
 
         return verifyAndUpdate(updateRequest.getRequestIds(),
-            updateRequest.getStatus(), event);
+                updateRequest.getStatus(), event);
     }
 
     private EventRequestStatusUpdateResult verifyAndUpdate(Set<Long> updateRequestIds,
                                                            Status updateRequestStatus,
                                                            Event event) {
         Long eventId = event.getId();
-        List<Request> allRequests = requestRepository.findAllByEventId(eventId);
-        Map<Status, Map<Long, Request>> statusSetMap = allRequests.stream()
-            .collect(Collectors.groupingBy(Request::getStatus, Collectors.toMap(Request::getId, Function.identity())));
         Integer participantLimit = event.getParticipantLimit();
         if (participantLimit.equals(0) || event.getRequestModeration().equals(false)) {
             return new EventRequestStatusUpdateResult();
         }
+        List<Request> allRequests = requestRepository.findAllByEventId(eventId);
+        log.info("found all requests for event {}", allRequests);
+        Map<Status, Map<Long, Request>> statusSetMap = allRequests.stream()
+                .collect(Collectors.groupingBy(Request::getStatus, Collectors.toMap(Request::getId, Function.identity())));
         Map<Long, Request> pendingRequests = statusSetMap.get(Status.PENDING);
-        Set<Long> pendingRequestIds = pendingRequests.keySet();
-        if (pendingRequestIds.isEmpty()) {
+        log.info("pending requests are: {}", pendingRequests);
+        if (pendingRequests == null || pendingRequests.isEmpty()) {
             throw new ConflictException("No pending requests for: " + eventId);
         }
+        Set<Long> pendingRequestIds = pendingRequests.keySet();
         if (!pendingRequestIds.containsAll(updateRequestIds)) {
             throw new ConflictException("Cannot update, status not pending: " + eventId);
         }
@@ -225,7 +218,7 @@ public class PrivateEventService {
                 Collection<Request> confirmedValues = confirmedCopy.values();
                 confirmedValues.forEach(x -> x.setStatus(Status.CONFIRMED));
                 confirmed =
-                    requestDtoMapper.toParticipationRequestDtos(confirmedValues);
+                        requestDtoMapper.toParticipationRequestDtos(confirmedValues);
                 rejected = Set.of();
                 if (total == participantLimit) {
                     pendingRequestIds.removeAll(updateRequestIds);
@@ -240,7 +233,7 @@ public class PrivateEventService {
                 Collection<Request> pendingValues = pendingRequests.values();
                 pendingValues.forEach(x -> x.setStatus(Status.REJECTED));
                 rejected =
-                    requestDtoMapper.toParticipationRequestDtos(pendingValues);
+                        requestDtoMapper.toParticipationRequestDtos(pendingValues);
                 confirmed = Set.of();
                 return new EventRequestStatusUpdateResult(confirmed, rejected);
             case null, default:

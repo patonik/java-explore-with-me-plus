@@ -1,3 +1,4 @@
+DROP TABLE IF EXISTS public.comp_event;
 DROP TABLE IF EXISTS public.requests;
 DROP TABLE IF EXISTS public.compilations;
 DROP TABLE IF EXISTS public.events;
@@ -69,6 +70,20 @@ CREATE TABLE IF NOT EXISTS public.COMPILATIONS
     REFERENCES public.events ( id )
     ON UPDATE NO ACTION
     ON DELETE NO ACTION
+    );
+CREATE TABLE IF NOT EXISTS public.COMP_EVENT
+(
+    COMPILATION_ID bigint NOT NULL,
+    event_id bigint NOT NULL,
+    CONSTRAINT comp_event_pkey PRIMARY KEY (COMPILATION_ID, event_id),
+    CONSTRAINT event_comp_join_fk FOREIGN KEY ( COMPILATION_ID )
+            REFERENCES public.compilations ( id )
+            ON UPDATE CASCADE
+            ON DELETE CASCADE,
+    CONSTRAINT comp_event_join_fk FOREIGN KEY ( event_id )
+        REFERENCES public.events ( id )
+        ON UPDATE CASCADE
+        ON DELETE CASCADE
     );
 CREATE TABLE IF NOT EXISTS public.REQUESTS
 (

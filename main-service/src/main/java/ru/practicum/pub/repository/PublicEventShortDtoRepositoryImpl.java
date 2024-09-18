@@ -53,7 +53,7 @@ public class PublicEventShortDtoRepositoryImpl implements PublicEventShortDtoRep
             cb.construct(
                 CategoryDto.class, categoryJoin.get("id"), categoryJoin.get("name")
             ),
-            subquery.getSelection(), // confirmedRequests will be filled later
+            subquery.getSelection(),
             eventRoot.get("eventDate"),
             eventRoot.get("createdOn"),
             cb.construct(
