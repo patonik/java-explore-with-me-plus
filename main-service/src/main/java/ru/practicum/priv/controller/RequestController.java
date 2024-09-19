@@ -32,7 +32,7 @@ public class RequestController {
                 .addArgument(userId)
                 .addArgument(eventId)
                 .log("Received request to add participation request with userId: {} and eventId: {}");
-        return new ResponseEntity<>(requestService.addMyRequest(userId, eventId), HttpStatus.OK);
+        return new ResponseEntity<>(requestService.addMyRequest(userId, eventId), HttpStatus.CREATED);
     }
 
     @PatchMapping("/{requestId}/cancel")

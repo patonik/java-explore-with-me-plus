@@ -1,7 +1,6 @@
 package ru.practicum.admin.service;
 
 import lombok.RequiredArgsConstructor;
-import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.admin.repository.AdminCategoryRepository;
@@ -33,17 +32,12 @@ public class AdminCategoryService {
         if (!adminCategoryRepository.existsById(catId)) {
             throw new NotFoundException("Category with id " + catId + " does not exist");
         }
-        try {
             adminCategoryRepository.deleteById(catId);
-        } catch (DataIntegrityViolationException e) {
-            throw new ConflictException(
-                "Cannot delete category with ID " + catId);
-        }
     }
 
     public CategoryDto updateCategory(Long catId, NewCategoryDto newCategoryDto) {
         Category found = adminCategoryRepository.findById(catId)
-            .orElseThrow(() -> new NotFoundException("Category with id " + catId + " does not exist"));
+                .orElseThrow(() -> new NotFoundException("Category with id " + catId + " does not exist"));
         String name = newCategoryDto.getName();
         if (!found.getName().equals(name) && adminCategoryRepository.existsByName(name)) {
             throw new ConflictException("Category with name " + name + " already exists");
@@ -52,4 +46,5 @@ public class AdminCategoryService {
         Category saved = adminCategoryRepository.save(found);
         return new CategoryDto(saved.getId(), saved.getName());
     }
+
 }

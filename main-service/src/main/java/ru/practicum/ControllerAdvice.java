@@ -3,6 +3,7 @@ package ru.practicum;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.ConstraintViolationException;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
@@ -30,8 +31,8 @@ public class ControllerAdvice {
         errors = fillErrors(errors, e.getCause());
         Set<ConstraintViolation<?>> constraintViolations = e.getConstraintViolations();
         StringJoiner reason = new StringJoiner(", ");
-        for (ConstraintViolation<?> constraintViolation : constraintViolations) {
-            reason.add(constraintViolation.getMessage());
+        if (constraintViolations != null) {
+            constraintViolations.forEach(x -> reason.add(x.getMessage()));
         }
         return ApiError.builder()
             .errors(errors)
@@ -47,6 +48,22 @@ public class ControllerAdvice {
     public ApiError handleConflictException(final ConflictException e) {
         String message = e.getMessage();
         log.warn("Conflict: {}", message);
+        List<String> errors = new ArrayList<>();
+        errors.add(message);
+        errors = fillErrors(errors, e.getCause());
+        return ApiError.builder()
+            .errors(errors)
+            .httpStatus(HttpStatus.CONFLICT)
+            .reason(errors.getLast())
+            .timestamp(LocalDateTime.now())
+            .build();
+    }
+
+    @ResponseStatus(HttpStatus.CONFLICT)
+    @ExceptionHandler(DataIntegrityViolationException.class)
+    public ApiError handleDataIntegrityException(final DataIntegrityViolationException e) {
+        String message = e.getMessage();
+        log.warn("DataIntegrityViolation: {}", message);
         List<String> errors = new ArrayList<>();
         errors.add(message);
         errors = fillErrors(errors, e.getCause());

@@ -93,9 +93,8 @@ class AdminCategoryServiceTest {
         when(adminCategoryRepository.existsById(catId)).thenReturn(true);
         doThrow(DataIntegrityViolationException.class).when(adminCategoryRepository).deleteById(catId);
 
-        ConflictException exception = assertThrows(ConflictException.class, () -> adminCategoryService.deleteCategory(catId));
+        assertThrows(DataIntegrityViolationException.class, () -> adminCategoryService.deleteCategory(catId));
 
-        assertEquals("Cannot delete category with ID 1", exception.getMessage());
         verify(adminCategoryRepository, times(1)).deleteById(catId);
     }
 

@@ -6,6 +6,8 @@ import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import ru.practicum.admin.repository.AdminUserRepository;
@@ -17,7 +19,7 @@ import ru.practicum.exception.ConflictException;
 import ru.practicum.exception.NotFoundException;
 import ru.practicum.model.User;
 
-import java.util.Arrays;
+import java.util.ArrayList;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -58,8 +60,12 @@ class UserServiceTest {
         UserDto user1 = new UserDto(1L, "Alice", "alice@example.com");
         UserDto user2 = new UserDto(2L, "Bob", "bob@example.com");
 
+        List<UserDto> userDtos = new ArrayList<>();
+        userDtos.add(user1);
+        userDtos.add(user2);
+        Page<UserDto> page = new PageImpl<>(userDtos);
         when(adminUserRepository.findUserDtosByIds(eq(ids), eq(pageable)))
-            .thenReturn(Arrays.asList(user1, user2));
+            .thenReturn(page);
 
         // Execute service method
         List<UserDto> users = userService.getUsers(ids, 0, 10);

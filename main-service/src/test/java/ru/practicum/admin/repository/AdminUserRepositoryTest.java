@@ -21,6 +21,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 @RequiredArgsConstructor(onConstructor = @__(@Autowired))
 class AdminUserRepositoryTest {
     private final AdminUserRepository adminUserRepository;
+    private Long id1;
+    private Long id2;
+    private Long id3;
 
     @BeforeEach
     void setUp() {
@@ -29,9 +32,12 @@ class AdminUserRepositoryTest {
         User user2 = new User(null, "Bob", "bob@example.com");
         User user3 = new User(null, "Charlie", "charlie@example.com");
 
-        adminUserRepository.save(user1);
-        adminUserRepository.save(user2);
-        adminUserRepository.save(user3);
+        user1 = adminUserRepository.save(user1);
+        id1 = user1.getId();
+        user2 = adminUserRepository.save(user2);
+        id2 = user2.getId();
+        user3 = adminUserRepository.save(user3);
+        id3 = user3.getId();
     }
 
     @Test
@@ -45,9 +51,9 @@ class AdminUserRepositoryTest {
         Pageable pageable3 = PageRequest.of(2, 1);
 
         // Act
-        List<UserDto> userDtos = adminUserRepository.findUserDtosByIds(ids, pageable);
-        List<UserDto> userDtos2 = adminUserRepository.findUserDtosByIds(ids, pageable2);
-        List<UserDto> userDtos3 = adminUserRepository.findUserDtosByIds(ids, pageable3);
+        List<UserDto> userDtos = adminUserRepository.findUserDtosByIds(ids, pageable).getContent();
+        List<UserDto> userDtos2 = adminUserRepository.findUserDtosByIds(ids, pageable2).getContent();
+        List<UserDto> userDtos3 = adminUserRepository.findUserDtosByIds(ids, pageable3).getContent();
 
         // Assert
         assertThat(userDtos).hasSize(1);
@@ -73,7 +79,7 @@ class AdminUserRepositoryTest {
     @Test
     void testFindById() {
         // Act
-        Optional<User> user = adminUserRepository.findById(1L);
+        Optional<User> user = adminUserRepository.findById(id1);
 
         // Assert
         assertThat(user).isPresent();

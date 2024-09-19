@@ -1,5 +1,7 @@
 package ru.practicum.pub.controller;
 
+import jakarta.servlet.http.HttpServletRequest;
+import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -12,8 +14,10 @@ import ru.practicum.DataTransferConvention;
 import ru.practicum.dto.event.EventFullDto;
 import ru.practicum.dto.event.EventShortDto;
 import ru.practicum.dto.event.SortCriterium;
+import ru.practicum.pub.service.PublicEventService;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 /**
  * Обратите внимание:
@@ -33,32 +37,46 @@ import java.time.LocalDateTime;
  */
 @RestController
 @RequestMapping("/events")
+@RequiredArgsConstructor
 public class PublicEventController {
+    private final PublicEventService publicEventService;
+
     @GetMapping
-    public ResponseEntity<EventShortDto> getEvents(@RequestParam String text,
-                                                   @RequestParam Long[] categories,
-                                                   @RequestParam Boolean paid,
-                                                   @RequestParam
-                                                   @DateTimeFormat(pattern = DataTransferConvention.DATE_TIME_PATTERN)
-                                                   LocalDateTime rangeStart,
-                                                   @RequestParam
-                                                   @DateTimeFormat(pattern = DataTransferConvention.DATE_TIME_PATTERN)
-                                                   LocalDateTime rangeEnd,
-                                                   @RequestParam(required = false, defaultValue = "false")
-                                                   Boolean onlyAvailable,
-                                                   @RequestParam SortCriterium sort,
-                                                   @RequestParam(required = false,
-                                                       defaultValue = DataTransferConvention.FROM)
-                                                   Integer from,
-                                                   @RequestParam(required = false,
-                                                       defaultValue = DataTransferConvention.SIZE)
-                                                   Integer size) {
-        return new ResponseEntity<>(null, HttpStatus.OK);
+    public ResponseEntity<List<EventShortDto>> getEvents(@RequestParam(required = false) String text,
+                                                         @RequestParam(required = false) Long[] categories,
+                                                         @RequestParam(required = false) Boolean paid,
+                                                         @RequestParam(required = false)
+                                                         @DateTimeFormat(pattern = DataTransferConvention.DATE_TIME_PATTERN)
+                                                         LocalDateTime rangeStart,
+                                                         @RequestParam(required = false)
+                                                         @DateTimeFormat(pattern = DataTransferConvention.DATE_TIME_PATTERN)
+                                                         LocalDateTime rangeEnd,
+                                                         @RequestParam(required = false, defaultValue = "false")
+                                                         Boolean onlyAvailable,
+                                                         @RequestParam(required = false) SortCriterium sort,
+                                                         @RequestParam(required = false,
+                                                             defaultValue = DataTransferConvention.FROM)
+                                                         Integer from,
+                                                         @RequestParam(required = false,
+                                                             defaultValue = DataTransferConvention.SIZE)
+                                                         Integer size, HttpServletRequest request) {
+        return new ResponseEntity<>(
+            publicEventService.getEvents(text, categories, paid, rangeStart, rangeEnd, onlyAvailable, sort, from, size,
+                request),
+            HttpStatus.OK);
     }
 
+    /**
+     * Обратите внимание:
+     * событие должно быть опубликовано
+     * информация о событии должна включать в себя количество просмотров и количество подтвержденных запросов
+     * информацию о том, что по этому эндпоинту был осуществлен и обработан запрос, нужно сохранить в сервисе статистики
+     * В случае, если события с заданным id не найдено, возвращает статус код 404
+     */
     @GetMapping("/{id}")
-    public ResponseEntity<EventFullDto> getEvent(@PathVariable Long id) {
-        return new ResponseEntity<>(null, HttpStatus.OK);
+    public ResponseEntity<EventFullDto> getEvent(@PathVariable Long id, HttpServletRequest request) {
+        return new ResponseEntity<>(publicEventService.getEvent(id, request), HttpStatus.OK);
     }
+
 
 }

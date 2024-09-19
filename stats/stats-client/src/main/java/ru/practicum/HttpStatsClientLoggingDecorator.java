@@ -2,7 +2,9 @@ package ru.practicum;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.client.RestClientException;
+import ru.practicum.dto.StatResponseDto;
 
+import java.util.List;
 import java.util.Optional;
 
 @Slf4j
@@ -12,6 +14,11 @@ public class HttpStatsClientLoggingDecorator implements HttpStatsClient {
 
     public HttpStatsClientLoggingDecorator(HttpStatsClient delegate) {
         this.delegate = delegate;
+    }
+
+    @Override
+    public List<StatResponseDto> getStats(String start, String end, List<String> uris, Boolean unique) {
+        return delegate.getStats(start, end, uris, unique);
     }
 
     @Override

@@ -25,7 +25,10 @@ public class UserService {
 
     public List<UserDto> getUsers(Long[] ids, Integer page, Integer size) {
         Pageable pageRequest = PageRequest.of(page, size);
-        return adminUserRepository.findUserDtosByIds(ids, pageRequest);
+        if (ids == null || ids.length == 0) {
+            return adminUserRepository.findAll(pageRequest).stream().map(userDtoMapper::toUserDto).toList();
+        }
+        return adminUserRepository.findUserDtosByIds(ids, pageRequest).getContent();
     }
 
     @Transactional
