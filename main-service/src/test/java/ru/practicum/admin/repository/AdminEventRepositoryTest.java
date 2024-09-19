@@ -99,7 +99,7 @@ class AdminEventRepositoryTest {
     @Test
     void testGetEvents() {
         Pageable pageable = PageRequest.of(0, 10);
-        List<EventFullDto> eventFullDtos = adminEventRepository.getEvents(
+        List<EventFullDto> eventFullDtos = adminEventRepository.getEventsOrderedById(
             new Long[] {user.getId()},
             new String[] {State.PENDING.name()},
             new Long[] {category.getId()},

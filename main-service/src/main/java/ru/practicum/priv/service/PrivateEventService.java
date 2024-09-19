@@ -37,7 +37,6 @@ public class PrivateEventService {
     private final RequestRepository requestRepository;
     private final NewEventDtoMapper newEventDtoMapper;
     private final EventFullDtoMapper eventFullDtoMapper;
-    private final EventShortDtoMapper eventShortDtoMapper;
     private final UpdateEventUserRequestMapper updateEventUserRequestMapper;
     private final HttpStatsClient httpStatsClient;
     private final RequestDtoMapper requestDtoMapper;
@@ -59,7 +58,7 @@ public class PrivateEventService {
     @Transactional(readOnly = true)
     public List<EventShortDto> getMyEvents(Long userId, Integer from, Integer size) {
         Pageable pageable = PageRequest.of(from, size);
-        List<EventShortDto> eventShortDtos = privateEventRepository.getEvents(userId, pageable);
+        List<EventShortDto> eventShortDtos = new ArrayList<>(privateEventRepository.getEvents(userId, pageable));
         log.info("found {} events", eventShortDtos.size());
         Params params = Statistical.getParams(new ArrayList<>(eventShortDtos));
         log.info("parameters for statService created: {}", params);
@@ -69,14 +68,12 @@ public class PrivateEventService {
                 .stream()
                 .collect(Collectors.toMap(x -> Long.parseLong(x.getUri().split("/")[2]), StatResponseDto::getHits));
         eventShortDtos.sort(Comparator.comparingLong(EventShortDto::getId));
-        boolean empty = hitMap.isEmpty();
+        if (hitMap.isEmpty()) {
+            return eventShortDtos;
+        }
         for (EventShortDto eventShortDto : eventShortDtos) {
-            long hits = 0L;
             Long eventId = eventShortDto.getId();
-            if (!empty && hitMap.containsKey(eventId)) {
-                hits = hitMap.get(eventId);
-            }
-            eventShortDto.setViews(hits);
+            eventShortDto.setViews(hitMap.getOrDefault(eventId, 0L));
         }
         log.info("found {} eventShortDtos", eventShortDtos.size());
         return eventShortDtos;
@@ -89,7 +86,7 @@ public class PrivateEventService {
                         .orElseThrow(() -> new NotFoundException("Event not found: " + eventId));
         Long confirmedRequests =
                 privateEventRepository.getRequestCountByEventAndStatus(eventId, Status.CONFIRMED).getConfirmedRequests();
-        EventFullDto eventFullDto = eventFullDtoMapper.toDto(event, 0L, confirmedRequests);
+        EventFullDto eventFullDto = eventFullDtoMapper.toDto(event, confirmedRequests, 0L);
         Params params = Statistical.getParams(List.of(eventFullDto));
         log.info("parameters for statService created: {}", params);
         List<StatResponseDto> statResponseDtos =
@@ -105,7 +102,7 @@ public class PrivateEventService {
         Event event =
                 privateEventRepository.findByIdAndInitiatorId(eventId, userId)
                         .orElseThrow(() -> new NotFoundException("Event not found: " + eventId));
-        if (!event.getState().equals(State.PENDING)) {
+        if (event.getState().equals(State.PUBLISHED)) {
             throw new ConflictException("cannot modify in current state");
         }
         final Long categoryId = updateEventUserRequest.getCategoryId();
@@ -115,9 +112,6 @@ public class PrivateEventService {
         } else {
             category = privateCategoryRepository.findById(categoryId)
                     .orElseThrow(() -> new NotFoundException("Category not found: " + categoryId));
-        }
-        if (event.getState().equals(State.PUBLISHED)) {
-            throw new ConflictException("You can't update a new event: " + eventId);
         }
         event = updateEventUserRequestMapper.updateEvent(updateEventUserRequest, event, category);
         UserStateAction userStateAction = updateEventUserRequest.getUserStateAction();
@@ -136,7 +130,7 @@ public class PrivateEventService {
         event = privateEventRepository.save(event);
         Long confirmedRequests =
                 privateEventRepository.getRequestCountByEventAndStatus(eventId, Status.CONFIRMED).getConfirmedRequests();
-        EventFullDto dto = eventFullDtoMapper.toDto(event, 0L, confirmedRequests);
+        EventFullDto dto = eventFullDtoMapper.toDto(event, confirmedRequests, 0L);
         Params params = Statistical.getParams(List.of(dto));
         log.info("parameters for statService created: {}", params);
         List<StatResponseDto> statResponseDto =

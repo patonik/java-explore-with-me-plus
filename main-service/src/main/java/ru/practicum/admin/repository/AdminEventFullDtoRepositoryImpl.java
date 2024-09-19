@@ -26,8 +26,8 @@ public class AdminEventFullDtoRepositoryImpl implements AdminEventFullDtoReposit
     private EntityManager em;
 
     @Override
-    public List<EventFullDto> getEvents(Long[] users, String[] states, Long[] categories, LocalDateTime rangeStart,
-                                        LocalDateTime rangeEnd, Pageable pageable) {
+    public List<EventFullDto> getEventsOrderedById(Long[] users, String[] states, Long[] categories, LocalDateTime rangeStart,
+                                                   LocalDateTime rangeEnd, Pageable pageable) {
         Object[] params = new Object[] {users, states, categories, rangeStart, rangeEnd};
         CriteriaBuilder cb = em.getCriteriaBuilder();
         CriteriaQuery<EventFullDto> cq = cb.createQuery(EventFullDto.class);
@@ -61,7 +61,10 @@ public class AdminEventFullDtoRepositoryImpl implements AdminEventFullDtoReposit
             subquery.getSelection(),
             cb.nullLiteral(Long.class))
         );
-        cq.where(predicates.toArray(new Predicate[0]));
+        if (!predicates.isEmpty()) {
+            cq.where(predicates.toArray(new Predicate[0]));
+        }
+        cq.orderBy(cb.asc(root.get("id")));
         int pageSize = pageable.getPageSize();
         TypedQuery<EventFullDto> eventFullDtoTypedQuery =
             em.createQuery(cq).setFirstResult(pageable.getPageNumber() * pageSize)

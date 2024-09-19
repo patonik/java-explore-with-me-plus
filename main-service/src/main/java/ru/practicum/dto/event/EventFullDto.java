@@ -10,7 +10,6 @@ import ru.practicum.dto.category.CategoryDto;
 import ru.practicum.dto.user.UserShortDto;
 import ru.practicum.json.LocalDateTimeDeserializer;
 import ru.practicum.json.LocalDateTimeSerializer;
-import ru.practicum.util.Statistical;
 
 import java.time.LocalDateTime;
 
@@ -23,7 +22,7 @@ import java.time.LocalDateTime;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class EventFullDto implements Statistical {
+public class EventFullDto implements EventDto {
     private Long id;
     private String annotation;
     private CategoryDto category;

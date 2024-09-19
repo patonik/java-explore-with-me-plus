@@ -104,11 +104,11 @@ class AdminEventServiceTest {
         int size = 10;
 
         Pageable pageable = PageRequest.of(from, size);
-        when(adminEventRepository.getEvents(any(), any(), any(), any(), any(), eq(pageable)))
+        when(adminEventRepository.getEventsOrderedById(any(), any(), any(), any(), any(), eq(pageable)))
             .thenReturn(List.of(eventFullDto));
+        StatResponseDto statResponseDto = new StatResponseDto("test", "/events/10", 10L);
         when(httpStatsClient.getStats(any(), any(), any(), any())).thenReturn(
-            List.of(new StatResponseDto("", "", 10L)));
-
+            List.of(statResponseDto));
         // Call the method
         List<EventFullDto> result =
             adminEventService.getEvents(users, states, categories, rangeStart, rangeEnd, from, size);
@@ -116,7 +116,7 @@ class AdminEventServiceTest {
         // Verify the result and interactions
         assertNotNull(result);
         assertEquals(1, result.size());
-        verify(adminEventRepository).getEvents(any(), any(), any(), any(), any(), eq(pageable));
+        verify(adminEventRepository).getEventsOrderedById(any(), any(), any(), any(), any(), eq(pageable));
     }
 
     @Test

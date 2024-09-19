@@ -28,7 +28,7 @@ public class UserService {
         if (ids == null || ids.length == 0) {
             return adminUserRepository.findAll(pageRequest).stream().map(userDtoMapper::toUserDto).toList();
         }
-        return adminUserRepository.findUserDtosByIds(ids, pageRequest);
+        return adminUserRepository.findUserDtosByIds(ids, pageRequest).getContent();
     }
 
     @Transactional

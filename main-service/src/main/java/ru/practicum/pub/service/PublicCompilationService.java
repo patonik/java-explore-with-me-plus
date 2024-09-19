@@ -6,21 +6,17 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import ru.practicum.HttpStatsClient;
-import ru.practicum.dto.StatResponseDto;
 import ru.practicum.dto.compilation.CompilationDto;
 import ru.practicum.dto.compilation.CompilationDtoMapper;
 import ru.practicum.dto.event.EventShortDto;
 import ru.practicum.exception.NotFoundException;
 import ru.practicum.model.Compilation;
 import ru.practicum.pub.repository.PublicCompilationRepository;
-import ru.practicum.util.Params;
-import ru.practicum.util.Statistical;
 
-import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.List;
-import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Service
 @RequiredArgsConstructor
@@ -32,37 +28,26 @@ public class PublicCompilationService {
 
     public List<CompilationDto> getCompilations(Boolean pinned, Integer from, Integer size) {
         Pageable pageable = PageRequest.of(from, size);
-        List<CompilationDto> allCompilationDtos = publicCompilationRepository.findAllCompilationDtos(pinned, pageable);
-        List<EventShortDto> shortDtos = allCompilationDtos
-            .stream()
-            .flatMap(x -> x.getEvents().stream())
-            .collect(Collectors.toList());
-        if (shortDtos.isEmpty()) {
-            return allCompilationDtos;
+        List<Compilation> compilations = publicCompilationRepository.findAllCompilations(pinned, pageable);
+        if (compilations.isEmpty()) {
+            return List.of();
         }
-        Params params = Statistical.getParams(new ArrayList<>(shortDtos));
-        log.info("parameters for statService created: {}", params);
-        List<StatResponseDto> statResponseDtoList =
-            httpStatsClient.getStats(params.start(), params.end(), params.uriList(), true);
-        Map<Long, Long> hitMap = statResponseDtoList
-            .stream()
-            .collect(Collectors.toMap(x -> Long.parseLong(x.getUri().split("/")[2]), StatResponseDto::getHits));
-        shortDtos.sort(Comparator.comparingLong(EventShortDto::getId));
-        for (EventShortDto eventShortDto : shortDtos) {
-            long hits = 0L;
-            Long eventId = eventShortDto.getId();
-            if (!hitMap.isEmpty() && hitMap.containsKey(eventId)) {
-                hits = hitMap.get(eventId);
-            }
-            eventShortDto.setViews(hits);
+        List<CompilationDto> compilationDtos = compilationDtoMapper.toCompilationDtoList(compilations);
+        Set<EventShortDto> eventShortDtoSet = compilationDtos
+                .stream()
+                .flatMap(x -> x == null ? Stream.empty() : x.getEvents().stream())
+                .collect(Collectors.toSet());
+        if (!eventShortDtoSet.isEmpty()) {
+            publicCompilationRepository.populateEventShortDtos(
+                    eventShortDtoSet, httpStatsClient);
         }
-        return allCompilationDtos;
+        return compilationDtos;
     }
 
     public CompilationDto getCompilation(Long compId) {
         Compilation compilation =
-            publicCompilationRepository.findById(compId)
-                .orElseThrow(() -> new NotFoundException("Compilation with id " + compId + " not found"));
+                publicCompilationRepository.findById(compId)
+                        .orElseThrow(() -> new NotFoundException("Compilation with id " + compId + " not found"));
         return compilationDtoMapper.toCompilationDto(compilation);
     }
 }

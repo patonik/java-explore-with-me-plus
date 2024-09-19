@@ -2,75 +2,98 @@ package ru.practicum.pub.repository;
 
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
+import jakarta.persistence.Tuple;
 import jakarta.persistence.TypedQuery;
-import jakarta.persistence.criteria.*;
+import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.persistence.criteria.CriteriaQuery;
+import jakarta.persistence.criteria.JoinType;
+import jakarta.persistence.criteria.Root;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Pageable;
-import ru.practicum.dto.category.CategoryDto;
-import ru.practicum.dto.compilation.CompilationDto;
+import ru.practicum.HttpStatsClient;
+import ru.practicum.dto.StatResponseDto;
 import ru.practicum.dto.event.EventShortDto;
 import ru.practicum.dto.event.request.Status;
-import ru.practicum.dto.user.UserShortDto;
 import ru.practicum.model.Compilation;
-import ru.practicum.model.Event;
 import ru.practicum.model.Request;
+import ru.practicum.util.Params;
+import ru.practicum.util.Statistical;
 
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
+@Slf4j
 public class CompilationDtoRepositoryImpl implements CompilationDtoRepository {
     @PersistenceContext
     private EntityManager em;
 
-    @Override
-    public List<CompilationDto> findAllCompilationDtos(Boolean pinned, Pageable pageable) {
+    public List<Compilation> findAllCompilations(Boolean pinned, Pageable pageable) {
         CriteriaBuilder cb = em.getCriteriaBuilder();
-        CriteriaQuery<CompilationDto> cq = cb.createQuery(CompilationDto.class);
+        CriteriaQuery<Compilation> cq = cb.createQuery(Compilation.class);
         Root<Compilation> root = cq.from(Compilation.class);
-        SetJoin<Compilation, Event> eventJoin = root.joinSet("events", JoinType.LEFT);
-
-        // Subquery to count confirmed requests
-        Subquery<Long> confirmedRequestsSubquery = cq.subquery(Long.class);
-        Root<Request> requestRoot = confirmedRequestsSubquery.from(Request.class);
-        confirmedRequestsSubquery.select(cb.count(requestRoot.get("id")));
-        confirmedRequestsSubquery.where(
-                cb.equal(requestRoot.get("event").get("id"), eventJoin.get("id")),
-                cb.equal(requestRoot.get("status"), Status.CONFIRMED)
-        );
-
-        // Select CompilationDto with nested EventShortDto
-        cq.select(cb.construct(
-                CompilationDto.class,
-                root.get("id"),
-                cb.construct(
-                        EventShortDto.class,
-                        eventJoin.get("id"),
-                        eventJoin.get("annotation"),
-                        cb.construct(
-                                CategoryDto.class,
-                                eventJoin.get("category").get("id"),
-                                eventJoin.get("category").get("name")
-                        ),
-                        confirmedRequestsSubquery.getSelection(),
-                        eventJoin.get("eventDate"),
-                        eventJoin.get("createdOn"),
-                        cb.construct(
-                                UserShortDto.class,
-                                eventJoin.get("initiator").get("id"),
-                                eventJoin.get("initiator").get("name")
-                        ),
-                        eventJoin.get("paid"),
-                        eventJoin.get("title"),
-                        cb.nullLiteral(Long.class) // views will be filled later
-                ),
-                root.get("pinned"),
-                root.get("title")
-        ));
+        root.fetch("events", JoinType.LEFT);
         if (pinned != null) {
             cq.where(cb.equal(root.get("pinned"), pinned));
         }
-        TypedQuery<CompilationDto> query = em.createQuery(cq);
-        query.setFirstResult(pageable.getPageNumber() * pageable.getPageSize());
-        query.setMaxResults(pageable.getPageSize());
+
+        TypedQuery<Compilation> query = em.createQuery(cq);
+        int pageSize = pageable.getPageSize();
+        query.setFirstResult(pageable.getPageNumber() * pageSize);
+        query.setMaxResults(pageSize);
 
         return query.getResultList();
     }
+
+    @Override
+    public void populateEventShortDtos(Set<EventShortDto> eventShortDtos,
+                                       HttpStatsClient httpStatsClient) {
+        // sort by EventShortDtos by id and put into map
+        Map<Long, EventShortDto> sortedDtoMap =
+                eventShortDtos.stream().sorted(Comparator.comparingLong(EventShortDto::getId)).collect(
+                        Collectors.toMap(EventShortDto::getId, Function.identity(), (x, y) -> {
+                            throw new RuntimeException("Duplicate key");
+                        }, LinkedHashMap::new));
+        log.info("Populated EventShortDtos: {}", sortedDtoMap);
+
+        // get confirmed request amounts for each id in the map sorted by id
+        Map<Long, Long> confReqMap = getConfReqMapSortedById(sortedDtoMap.keySet());
+        log.info("Populated confReqList: {}", confReqMap);
+
+        // get map of hits for each event id (no entries for events without views)
+        Params params = Statistical.getParams(new ArrayList<>(eventShortDtos));
+        List<StatResponseDto> statResponseDtoList =
+                httpStatsClient.getStats(params.start(), params.end(), params.uriList(), true);
+        Map<Long, Long> hitMap = statResponseDtoList
+                .stream()
+                .collect(Collectors.toMap(x -> Long.parseLong(x.getUri().split("/")[2]), StatResponseDto::getHits));
+        log.info("Populated hitMap: {}", hitMap);
+
+        //populate EventShortDtos with confirmed request amounts and views
+        for (EventShortDto eventShortDto : sortedDtoMap.values()) {
+            Long eventId = eventShortDto.getId();
+            eventShortDto.setConfirmedRequests(confReqMap.getOrDefault(eventId, 0L));
+            eventShortDto.setViews(hitMap.getOrDefault(eventId, 0L));
+        }
+    }
+
+    private Map<Long, Long> getConfReqMapSortedById(Set<Long> sortedDtoKeySet) {
+        CriteriaBuilder cb = em.getCriteriaBuilder();
+        CriteriaQuery<Tuple> cq = cb.createQuery(Tuple.class);
+        Root<Request> root = cq.from(Request.class);
+        cq.multiselect(root.get("event").get("id"), cb.count(root));
+        cq.where(root.get("event").get("id").in(sortedDtoKeySet), cb.equal(root.get("status"), Status.CONFIRMED));
+        cq.groupBy(root.get("event").get("id"));
+        cq.orderBy(cb.asc(root.get("event").get("id")));
+        List<Tuple> tupleList = em.createQuery(cq).getResultList();
+        return tupleList.stream()
+                .collect(Collectors.toMap(tuple -> tuple.get(0, Long.class), tuple -> tuple.get(1, Long.class)));
+    }
+
+
 }

@@ -51,9 +51,9 @@ class AdminUserRepositoryTest {
         Pageable pageable3 = PageRequest.of(2, 1);
 
         // Act
-        List<UserDto> userDtos = adminUserRepository.findUserDtosByIds(ids, pageable);
-        List<UserDto> userDtos2 = adminUserRepository.findUserDtosByIds(ids, pageable2);
-        List<UserDto> userDtos3 = adminUserRepository.findUserDtosByIds(ids, pageable3);
+        List<UserDto> userDtos = adminUserRepository.findUserDtosByIds(ids, pageable).getContent();
+        List<UserDto> userDtos2 = adminUserRepository.findUserDtosByIds(ids, pageable2).getContent();
+        List<UserDto> userDtos3 = adminUserRepository.findUserDtosByIds(ids, pageable3).getContent();
 
         // Assert
         assertThat(userDtos).hasSize(1);

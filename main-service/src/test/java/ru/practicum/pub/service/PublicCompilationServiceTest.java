@@ -20,11 +20,8 @@ import java.util.Set;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyLong;
-import static org.mockito.Mockito.anyBoolean;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.Mockito.*;
 
 class PublicCompilationServiceTest {
 
@@ -51,7 +48,7 @@ class PublicCompilationServiceTest {
         // Sample compilation for testing
         compilation = new Compilation(1L, true, "Sample Compilation", Set.of());
         compilationDto =
-            CompilationDto.builder().id(1L).title("Sample Compilation").pinned(true).events(Set.of()).build();
+                CompilationDto.builder().id(1L).title("Sample Compilation").pinned(true).events(Set.of()).build();
     }
 
     @AfterEach
@@ -62,8 +59,12 @@ class PublicCompilationServiceTest {
     @Test
     void getCompilations_Success() {
         // Mock repository method to return compilation DTO
-        when(publicCompilationRepository.findAllCompilationDtos(anyBoolean(), any())).thenReturn(
-            List.of(compilationDto));
+        List<Compilation> comps = List.of(compilation);
+        when(publicCompilationRepository.findAllCompilations(anyBoolean(), any())).thenReturn(
+                comps);
+        List<CompilationDto> compDtos = List.of(compilationDto);
+        when(compilationDtoMapper.toCompilationDtoList(comps)).thenReturn(compDtos);
+        doNothing().when(publicCompilationRepository).populateEventShortDtos(anySet(), any());
 
         // Call the service method
         List<CompilationDto> compilations = publicCompilationService.getCompilations(true, 0, 10);
@@ -72,7 +73,7 @@ class PublicCompilationServiceTest {
         assertNotNull(compilations);
         assertEquals(1, compilations.size());
         assertEquals("Sample Compilation", compilations.getFirst().getTitle());
-        verify(publicCompilationRepository).findAllCompilationDtos(anyBoolean(), any());
+        verify(publicCompilationRepository).findAllCompilations(anyBoolean(), any());
     }
 
     @Test

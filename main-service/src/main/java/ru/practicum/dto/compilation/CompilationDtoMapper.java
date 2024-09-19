@@ -9,6 +9,7 @@ import ru.practicum.dto.event.EventShortDto;
 import ru.practicum.model.Compilation;
 import ru.practicum.model.Event;
 
+import java.util.List;
 import java.util.Set;
 
 @Mapper(componentModel = MappingConstants.ComponentModel.SPRING,
@@ -22,4 +23,8 @@ public interface CompilationDtoMapper {
     @Mapping(target = "events", source = "events")
     Compilation updateCompilation(UpdateCompilationRequest updateCompilationRequest,
                                   @MappingTarget Compilation compilation, Set<Event> events);
+
+    List<CompilationDto> toCompilationDtoList(List<Compilation> compilations);
+
+    List<EventShortDto> toEventShortDtoList(List<Event> events);
 }
