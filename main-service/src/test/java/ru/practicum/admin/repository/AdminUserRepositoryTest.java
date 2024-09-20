@@ -45,7 +45,7 @@ class AdminUserRepositoryTest {
         List<User> all = adminUserRepository.findAll();
         User first = all.getFirst();
         User last = all.getLast();
-        Long[] ids = {first.getId(), last.getId()};
+        List<Long> ids = List.of(first.getId(), last.getId());
         Pageable pageable = PageRequest.of(0, 1);
         Pageable pageable2 = PageRequest.of(1, 1);
         Pageable pageable3 = PageRequest.of(2, 1);

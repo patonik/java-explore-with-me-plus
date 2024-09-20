@@ -55,7 +55,7 @@ class UserServiceTest {
     @Test
     void testGetUsers() {
         // Setup test data
-        Long[] ids = {1L, 2L};
+        List<Long> ids = List.of(1L, 2L);
         Pageable pageable = PageRequest.of(0, 10);
         UserDto user1 = new UserDto(1L, "Alice", "alice@example.com");
         UserDto user2 = new UserDto(2L, "Bob", "bob@example.com");

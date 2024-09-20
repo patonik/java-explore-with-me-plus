@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import ru.practicum.admin.service.AdminEventService;
 import ru.practicum.dto.event.EventFullDto;
+import ru.practicum.dto.event.State;
 import ru.practicum.dto.event.UpdateEventAdminRequest;
 
 import java.time.LocalDateTime;
@@ -30,12 +31,14 @@ public class AdminEventController {
     private final AdminEventService adminEventService;
 
     @GetMapping
-    public ResponseEntity<List<EventFullDto>> getEvents(@RequestParam(required = false) Long[] users,
-                                                        @RequestParam(required = false) String[] states,
-                                                        @RequestParam(required = false) Long[] categories,
-                                                        @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+    public ResponseEntity<List<EventFullDto>> getEvents(@RequestParam(required = false) List<Long> users,
+                                                        @RequestParam(required = false) List<State> states,
+                                                        @RequestParam(required = false) List<Long> categories,
+                                                        @RequestParam(required = false)
+                                                        @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")
                                                         LocalDateTime rangeStart,
-                                                        @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+                                                        @RequestParam(required = false)
+                                                        @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")
                                                         LocalDateTime rangeEnd,
                                                         @RequestParam(required = false, defaultValue = "0")
                                                         Integer from,

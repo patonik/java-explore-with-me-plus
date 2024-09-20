@@ -60,7 +60,7 @@ class AdminEventControllerTest {
     @Test
     void getEvents_Success() throws Exception {
         // Mock the service call
-        when(adminEventService.getEvents(any(Long[].class), any(String[].class), any(Long[].class),
+        when(adminEventService.getEvents(any(), any(), any(),
             any(LocalDateTime.class), any(LocalDateTime.class), any(Integer.class), any(Integer.class)))
             .thenReturn(List.of(eventFullDto));
 

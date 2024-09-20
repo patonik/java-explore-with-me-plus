@@ -23,9 +23,9 @@ public class UserService {
     private final NewUserRequestMapper newUserRequestMapper;
     private final UserDtoMapper userDtoMapper;
 
-    public List<UserDto> getUsers(Long[] ids, Integer page, Integer size) {
+    public List<UserDto> getUsers(List<Long> ids, Integer page, Integer size) {
         Pageable pageRequest = PageRequest.of(page, size);
-        if (ids == null || ids.length == 0) {
+        if (ids == null || ids.isEmpty()) {
             return adminUserRepository.findAll(pageRequest).stream().map(userDtoMapper::toUserDto).toList();
         }
         return adminUserRepository.findUserDtosByIds(ids, pageRequest).getContent();
