@@ -11,6 +11,7 @@ import jakarta.persistence.criteria.Subquery;
 import org.springframework.data.domain.Pageable;
 import ru.practicum.dto.category.CategoryDto;
 import ru.practicum.dto.event.EventFullDto;
+import ru.practicum.dto.event.State;
 import ru.practicum.dto.event.request.Status;
 import ru.practicum.dto.user.UserShortDto;
 import ru.practicum.model.Event;
@@ -18,7 +19,6 @@ import ru.practicum.model.Request;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 public class AdminEventFullDtoRepositoryImpl implements AdminEventFullDtoRepository {
@@ -26,9 +26,12 @@ public class AdminEventFullDtoRepositoryImpl implements AdminEventFullDtoReposit
     private EntityManager em;
 
     @Override
-    public List<EventFullDto> getEventsOrderedById(Long[] users, String[] states, Long[] categories, LocalDateTime rangeStart,
-                                                   LocalDateTime rangeEnd, Pageable pageable) {
-        Object[] params = new Object[] {users, states, categories, rangeStart, rangeEnd};
+    public List<EventFullDto> getEventsOrderedById(List<Long> users,
+                                                   List<State> states,
+                                                   List<Long> categories,
+                                                   LocalDateTime rangeStart,
+                                                   LocalDateTime rangeEnd,
+                                                   Pageable pageable) {
         CriteriaBuilder cb = em.getCriteriaBuilder();
         CriteriaQuery<EventFullDto> cq = cb.createQuery(EventFullDto.class);
         Root<Event> root = cq.from(Event.class);
@@ -40,7 +43,7 @@ public class AdminEventFullDtoRepositoryImpl implements AdminEventFullDtoReposit
             cb.equal(subRoot.get("status"), Status.CONFIRMED)
         );
 
-        List<Predicate> predicates = getPredicates(cb, root, params);
+        List<Predicate> predicates = getPredicates(cb, root, users, states, categories, rangeStart, rangeEnd);
         cq.select(cb.construct(EventFullDto.class,
             root.get("id"),
             root.get("annotation"),
@@ -72,22 +75,23 @@ public class AdminEventFullDtoRepositoryImpl implements AdminEventFullDtoReposit
         return eventFullDtoTypedQuery.getResultList();
     }
 
-    private List<Predicate> getPredicates(CriteriaBuilder criteriaBuilder, Root<Event> root, Object... args) {
+    private List<Predicate> getPredicates(CriteriaBuilder criteriaBuilder,
+                                          Root<Event> root,
+                                          List<Long> users,
+                                          List<State> states,
+                                          List<Long> categories,
+                                          LocalDateTime rangeStart,
+                                          LocalDateTime rangeEnd) {
         List<Predicate> predicates = new ArrayList<>();
-        Long[] userIds = (Long[]) args[0];
-        if (userIds != null && userIds.length > 0) {
-            predicates.add(root.get("initiator").get("id").in(Arrays.asList(userIds)));
+        if (users != null && !users.isEmpty()) {
+            predicates.add(root.get("initiator").get("id").in(users));
         }
-        String[] states = (String[]) args[1];
-        if (states != null && states.length > 0) {
-            predicates.add(root.get("state").in(Arrays.asList(states)));
+        if (states != null && !states.isEmpty()) {
+            predicates.add(root.get("state").in(states));
         }
-        Long[] categories = (Long[]) args[2];
-        if (categories != null && categories.length > 0) {
-            predicates.add(root.get("category").get("id").in(Arrays.asList(categories)));
+        if (categories != null && !categories.isEmpty()) {
+            predicates.add(root.get("category").get("id").in(categories));
         }
-        LocalDateTime rangeStart = (LocalDateTime) args[3];
-        LocalDateTime rangeEnd = (LocalDateTime) args[4];
         if (rangeStart != null && rangeEnd != null) {
             predicates.add(criteriaBuilder.between(root.get("eventDate"), rangeStart, rangeEnd));
         } else if (rangeStart != null) {

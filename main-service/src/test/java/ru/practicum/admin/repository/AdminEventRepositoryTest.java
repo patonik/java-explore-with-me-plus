@@ -27,7 +27,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @DataJpaTest
 @ActiveProfiles("test")
-@RequiredArgsConstructor(onConstructor_ = {@Autowired})
+@RequiredArgsConstructor(onConstructor = @__(@Autowired))
 class AdminEventRepositoryTest {
     private final AdminEventRepository adminEventRepository;
     private final AdminUserRepository adminUserRepository;
@@ -37,7 +37,7 @@ class AdminEventRepositoryTest {
     private User user;
     private Category category;
     private Long id;
-    private static long counter = 1;
+    private static Long counter = 1L;
     private String title;
 
     @BeforeEach
@@ -100,9 +100,9 @@ class AdminEventRepositoryTest {
     void testGetEvents() {
         Pageable pageable = PageRequest.of(0, 10);
         List<EventFullDto> eventFullDtos = adminEventRepository.getEventsOrderedById(
-            new Long[] {user.getId()},
-            new String[] {State.PENDING.name()},
-            new Long[] {category.getId()},
+            List.of(user.getId()),
+            List.of(State.PENDING),
+            List.of(category.getId()),
             LocalDateTime.now().minusDays(1),
             LocalDateTime.now().plusDays(2),
             pageable

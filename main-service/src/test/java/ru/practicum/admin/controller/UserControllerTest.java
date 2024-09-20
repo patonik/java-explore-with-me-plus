@@ -49,7 +49,7 @@ class UserControllerTest {
 
     @Test
     void testGetUsers_ReturnsUserList() throws Exception {
-        Long[] ids = {1L, 2L};
+        List<Long> ids = List.of(1L, 2L);
         List<UserDto> users = Arrays.asList(user1, user2);
         Mockito.when(userService.getUsers(eq(ids), eq(0), eq(10))).thenReturn(users);
 
@@ -65,7 +65,7 @@ class UserControllerTest {
 
     @Test
     void testGetUsers_ReturnsEmptyList() throws Exception {
-        Long[] ids = {1L, 2L};
+        List<Long> ids = List.of(1L, 2L);
         Mockito.when(userService.getUsers(eq(ids), eq(0), eq(10))).thenReturn(Collections.emptyList());
 
         mockMvc.perform(get("/admin/users")

@@ -95,9 +95,9 @@ class AdminEventServiceTest {
     @Test
     void getEvents_Success() {
         // Prepare data
-        Long[] users = {1L, 2L};
-        String[] states = {"PUBLISHED", "PENDING"};
-        Long[] categories = {1L, 2L};
+        List<Long> users = List.of(1L, 2L);
+        List<State> states = List.of(State.PUBLISHED, State.PENDING);
+        List<Long> categories = List.of(1L, 2L);
         LocalDateTime rangeStart = LocalDateTime.now().minusDays(1);
         LocalDateTime rangeEnd = LocalDateTime.now();
         int from = 0;
