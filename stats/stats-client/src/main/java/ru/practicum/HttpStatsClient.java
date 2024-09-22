@@ -1,10 +1,14 @@
 package ru.practicum;
 
+import ru.practicum.dto.StatResponseDto;
+
 import java.util.List;
+import java.util.Optional;
 
 public interface HttpStatsClient {
+    List<StatResponseDto> getStats(String start, String end, List<String> uris, Boolean unique);
 
-    <R> R getStats(String start, String end, List<String> uris, boolean unique, Class<R> responseType);
+    <R> Optional<R> getStats(StatsParameters<R> params);
 
-    <T, R> R sendHit(T hit, Class<R> responseType);
+    <T, R> Optional<R> sendHit(T hitDto, Class<R> responseType);
 }

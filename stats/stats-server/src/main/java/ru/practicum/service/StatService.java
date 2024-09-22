@@ -11,10 +11,7 @@ import ru.practicum.model.ServiceHit;
 import ru.practicum.repository.StatRepository;
 
 import java.time.LocalDateTime;
-import java.time.format.DateTimeParseException;
 import java.util.List;
-
-import static ru.practicum.constants.DataTransferConvention.DATE_TIME_FORMATTER;
 
 @Service
 @RequiredArgsConstructor(onConstructor = @__(@Autowired))
@@ -33,17 +30,9 @@ public class StatService {
         return dto;
     }
 
-    public List<StatResponseDto> getHits(String start, String end, String[] uris, Boolean unique) {
-        LocalDateTime from;
-        LocalDateTime to;
-        try {
-            from = LocalDateTime.parse(start, DATE_TIME_FORMATTER);
-            to = LocalDateTime.parse(end, DATE_TIME_FORMATTER);
-        } catch (DateTimeParseException e) {
-            throw new RuntimeException(e);
-        }
+    public List<StatResponseDto> getHits(LocalDateTime start, LocalDateTime end, String[] uris, Boolean unique) {
         List<StatResponseDto> statResponseDtos;
-        statResponseDtos = statRepository.getHitListElementDtos(from, to, uris, unique);
+        statResponseDtos = statRepository.getHitListElementDtos(start, end, uris, unique);
         return statResponseDtos;
     }
 }
