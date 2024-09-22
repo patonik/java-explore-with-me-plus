@@ -119,37 +119,36 @@ CREATE TABLE IF NOT EXISTS public.LOCI
 CREATE OR REPLACE FUNCTION distance(lat1 float, lon1 float, lat2 float, lon2 float)
     RETURNS float
 AS
-$$
-DECLARE
-    dist            float = 0;
-    rad_lat1        float;
-    rad_lat2        float;
-    d_lat           float;
-    d_lon           float;
-    a               float;
-    c               float;
-    earth_radius_km float = 6371.0; -- Average radius of the Earth in km
-BEGIN
-    IF lat1 = lat2 AND lon1 = lon2 THEN
-        RETURN dist; -- Distance is zero when both points are the same
-    ELSE
-        -- Convert degrees to radians
-        rad_lat1 = radians(lat1);
-        rad_lat2 = radians(lat2);
-        d_lat = radians(lat2 - lat1);
-        d_lon = radians(lon2 - lon1);
+'
+    DECLARE
+        dist            float = 0;
+        rad_lat1        float;
+        rad_lat2        float;
+        d_lat           float;
+        d_lon           float;
+        a               float;
+        c               float;
+        earth_radius_km float = 6371.0; -- Average radius of the Earth in km
+    BEGIN
+        IF lat1 = lat2 AND lon1 = lon2 THEN
+            RETURN dist; -- Distance is zero when both points are the same
+        ELSE
+            -- Convert degrees to radians
+            rad_lat1 = radians(lat1);
+            rad_lat2 = radians(lat2);
+            d_lat = radians(lat2 - lat1);
+            d_lon = radians(lon2 - lon1);
 
-        -- Haversine formula
-        a = sin(d_lat / 2) * sin(d_lat / 2) +
-            cos(rad_lat1) * cos(rad_lat2) *
-            sin(d_lon / 2) * sin(d_lon / 2);
-        c = 2 * atan2(sqrt(a), sqrt(1 - a));
+            -- Haversine formula
+            a = sin(d_lat / 2) * sin(d_lat / 2) +
+                cos(rad_lat1) * cos(rad_lat2) *
+                sin(d_lon / 2) * sin(d_lon / 2);
+            c = 2 * atan2(sqrt(a), sqrt(1 - a));
 
-        -- Distance in kilometers
-        dist = earth_radius_km * c;
+            -- Distance in kilometers
+            dist = earth_radius_km * c;
 
-        RETURN dist;
-    END IF;
-END;
-$$
-    LANGUAGE plpgsql;
+            RETURN dist;
+        END IF;
+    END;
+' LANGUAGE PLPGSQL;
