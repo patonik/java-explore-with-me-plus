@@ -20,7 +20,7 @@ import ru.practicum.priv.repository.PrivateCategoryRepository;
 import ru.practicum.priv.repository.PrivateEventRepository;
 import ru.practicum.priv.repository.PrivateUserRepository;
 import ru.practicum.priv.repository.RequestRepository;
-import ru.practicum.util.Params;
+import ru.practicum.util.StatParams;
 import ru.practicum.util.Statistical;
 
 import java.util.*;
@@ -60,10 +60,10 @@ public class PrivateEventService {
         Pageable pageable = PageRequest.of(from, size);
         List<EventShortDto> eventShortDtos = new ArrayList<>(privateEventRepository.getEvents(userId, pageable));
         log.info("found {} events", eventShortDtos.size());
-        Params params = Statistical.getParams(new ArrayList<>(eventShortDtos));
-        log.info("parameters for statService created: {}", params);
+        StatParams statParams = Statistical.getParams(new ArrayList<>(eventShortDtos));
+        log.info("parameters for statService created: {}", statParams);
         List<StatResponseDto> statResponseDto =
-                httpStatsClient.getStats(params.start(), params.end(), params.uriList(), true);
+                httpStatsClient.getStats(statParams.start(), statParams.end(), statParams.uriList(), true);
         Map<Long, Long> hitMap = statResponseDto
                 .stream()
                 .collect(Collectors.toMap(x -> Long.parseLong(x.getUri().split("/")[2]), StatResponseDto::getHits));
@@ -87,10 +87,10 @@ public class PrivateEventService {
         Long confirmedRequests =
                 privateEventRepository.getRequestCountByEventAndStatus(eventId, Status.CONFIRMED).getConfirmedRequests();
         EventFullDto eventFullDto = eventFullDtoMapper.toDto(event, confirmedRequests, 0L);
-        Params params = Statistical.getParams(List.of(eventFullDto));
-        log.info("parameters for statService created: {}", params);
+        StatParams statParams = Statistical.getParams(List.of(eventFullDto));
+        log.info("parameters for statService created: {}", statParams);
         List<StatResponseDto> statResponseDtos =
-                httpStatsClient.getStats(params.start(), params.end(), params.uriList(), true);
+                httpStatsClient.getStats(statParams.start(), statParams.end(), statParams.uriList(), true);
         if (!statResponseDtos.isEmpty()) {
             eventFullDto.setViews(statResponseDtos.getFirst().getHits());
         }
@@ -131,10 +131,10 @@ public class PrivateEventService {
         Long confirmedRequests =
                 privateEventRepository.getRequestCountByEventAndStatus(eventId, Status.CONFIRMED).getConfirmedRequests();
         EventFullDto dto = eventFullDtoMapper.toDto(event, confirmedRequests, 0L);
-        Params params = Statistical.getParams(List.of(dto));
-        log.info("parameters for statService created: {}", params);
+        StatParams statParams = Statistical.getParams(List.of(dto));
+        log.info("parameters for statService created: {}", statParams);
         List<StatResponseDto> statResponseDto =
-                httpStatsClient.getStats(params.start(), params.end(), params.uriList(), true);
+                httpStatsClient.getStats(statParams.start(), statParams.end(), statParams.uriList(), true);
         Long hits = 0L;
         if (!statResponseDto.isEmpty()) {
             hits = statResponseDto.getFirst().getHits();

@@ -22,7 +22,8 @@ import ru.practicum.exception.ConflictException;
 import ru.practicum.exception.NotFoundException;
 import ru.practicum.model.Category;
 import ru.practicum.model.Event;
-import ru.practicum.util.Params;
+import ru.practicum.util.EventSearchParams;
+import ru.practicum.util.StatParams;
 import ru.practicum.util.Statistical;
 
 import java.time.LocalDateTime;
@@ -42,20 +43,19 @@ public class AdminEventService {
     private final EventFullDtoMapper eventFullDtoMapper;
     private final HttpStatsClient httpStatsClient;
 
-    public List<EventFullDto> getEvents(List<Long> users,
-                                        List<State> states,
-                                        List<Long> categories,
-                                        LocalDateTime rangeStart,
-                                        LocalDateTime rangeEnd, Integer from, Integer size) {
+    public List<EventFullDto> getEvents(EventSearchParams eventSearchParams) {
+        LocalDateTime rangeStart = eventSearchParams.rangeStart();
+        LocalDateTime rangeEnd = eventSearchParams.rangeEnd();
         if (rangeStart != null && rangeEnd != null && rangeStart.isAfter(rangeEnd)) {
             throw new ConstraintViolationException("Range start is after range end", Set.of());
         }
-        Pageable pageable = PageRequest.of(from, size);
+        Pageable pageable = PageRequest.of(eventSearchParams.from(), eventSearchParams.size());
 
         List<EventFullDto> eventFullDtoListSorted = adminEventRepository.getEventsOrderedById(
-            users,
-            states,
-            categories,
+            eventSearchParams.users(),
+            eventSearchParams.states(),
+            eventSearchParams.categories(),
+            eventSearchParams.loci(),
             rangeStart,
             rangeEnd,
             pageable);
@@ -63,10 +63,10 @@ public class AdminEventService {
             return eventFullDtoListSorted;
         }
 
-        Params params = Statistical.getParams(new ArrayList<>(eventFullDtoListSorted));
+        StatParams statParams = Statistical.getParams(new ArrayList<>(eventFullDtoListSorted));
         log.info("parameters for getting views of events: {}", eventFullDtoListSorted);
         List<StatResponseDto> statResponseDtoList =
-            httpStatsClient.getStats(params.start(), params.end(), params.uriList(), true);
+            httpStatsClient.getStats(statParams.start(), statParams.end(), statParams.uriList(), true);
         if (statResponseDtoList.isEmpty()) {
             return eventFullDtoListSorted;
         }
@@ -118,10 +118,10 @@ public class AdminEventService {
         RequestCount requestCount = adminEventRepository.getRequestCountByEventAndStatus(eventId, Status.CONFIRMED);
         EventFullDto eventFullDto = eventFullDtoMapper.toDto(event, requestCount.getConfirmedRequests(), 0L);
 
-        Params params = Statistical.getParams(List.of(eventFullDto));
-        log.info("parameters for getting views of event: {}", params);
+        StatParams statParams = Statistical.getParams(List.of(eventFullDto));
+        log.info("parameters for getting views of event: {}", statParams);
         List<StatResponseDto> statResponseDtoList =
-            httpStatsClient.getStats(params.start(), params.end(), params.uriList(), true);
+            httpStatsClient.getStats(statParams.start(), statParams.end(), statParams.uriList(), true);
         Long hits = 0L;
         if (!statResponseDtoList.isEmpty()) {
             hits = statResponseDtoList.getFirst().getHits();

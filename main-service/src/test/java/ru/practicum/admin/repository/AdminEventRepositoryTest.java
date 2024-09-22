@@ -63,7 +63,7 @@ class AdminEventRepositoryTest {
             .description("Test Description%d".formatted(id))
             .eventDate(LocalDateTime.now().plusDays(1))
             .initiator(user)
-            .location(new ru.practicum.dto.event.Location(0.0, 0.0))
+            .location(new ru.practicum.dto.event.Location(0.0f, 0.0f))
             .paid(false)
             .participantLimit(10)
             .requestModeration(true)
@@ -103,6 +103,7 @@ class AdminEventRepositoryTest {
             List.of(user.getId()),
             List.of(State.PENDING),
             List.of(category.getId()),
+            null,
             LocalDateTime.now().minusDays(1),
             LocalDateTime.now().plusDays(2),
             pageable

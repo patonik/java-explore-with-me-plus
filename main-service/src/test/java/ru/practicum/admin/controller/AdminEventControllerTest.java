@@ -60,8 +60,7 @@ class AdminEventControllerTest {
     @Test
     void getEvents_Success() throws Exception {
         // Mock the service call
-        when(adminEventService.getEvents(any(), any(), any(),
-            any(LocalDateTime.class), any(LocalDateTime.class), any(Integer.class), any(Integer.class)))
+        when(adminEventService.getEvents(any()))
             .thenReturn(List.of(eventFullDto));
 
         mockMvc.perform(get("/admin/events")

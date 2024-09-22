@@ -23,6 +23,7 @@ import ru.practicum.dto.event.request.Status;
 import ru.practicum.exception.NotFoundException;
 import ru.practicum.model.Category;
 import ru.practicum.model.Event;
+import ru.practicum.util.EventSearchParams;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -104,19 +105,20 @@ class AdminEventServiceTest {
         int size = 10;
 
         Pageable pageable = PageRequest.of(from, size);
-        when(adminEventRepository.getEventsOrderedById(any(), any(), any(), any(), any(), eq(pageable)))
+        when(adminEventRepository.getEventsOrderedById(any(), any(), any(), any(), any(), any(), eq(pageable)))
             .thenReturn(List.of(eventFullDto));
         StatResponseDto statResponseDto = new StatResponseDto("test", "/events/10", 10L);
         when(httpStatsClient.getStats(any(), any(), any(), any())).thenReturn(
             List.of(statResponseDto));
         // Call the method
         List<EventFullDto> result =
-            adminEventService.getEvents(users, states, categories, rangeStart, rangeEnd, from, size);
+            adminEventService.getEvents(
+                new EventSearchParams(users, states, categories, rangeStart, rangeEnd, null, from, size));
 
         // Verify the result and interactions
         assertNotNull(result);
         assertEquals(1, result.size());
-        verify(adminEventRepository).getEventsOrderedById(any(), any(), any(), any(), any(), eq(pageable));
+        verify(adminEventRepository).getEventsOrderedById(any(), any(), any(), any(), any(), any(), eq(pageable));
     }
 
     @Test

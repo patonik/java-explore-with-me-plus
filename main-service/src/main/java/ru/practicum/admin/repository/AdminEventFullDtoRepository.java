@@ -11,6 +11,7 @@ public interface AdminEventFullDtoRepository {
     List<EventFullDto> getEventsOrderedById(List<Long> users,
                                             List<State> states,
                                             List<Long> categories,
+                                            List<Long> loci,
                                             LocalDateTime rangeStart,
                                             LocalDateTime rangeEnd,
                                             Pageable pageable);

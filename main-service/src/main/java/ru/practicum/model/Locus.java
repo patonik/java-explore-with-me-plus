@@ -1,0 +1,59 @@
+package ru.practicum.model;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.SequenceGenerator;
+import jakarta.persistence.Table;
+import lombok.Getter;
+import lombok.Setter;
+import ru.practicum.dto.locus.LocusType;
+
+import java.util.Objects;
+
+@Entity
+@Table(name = "LOCI")
+@Getter
+@Setter
+public class Locus {
+    @Id
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "LOC_ID_SEQ")
+    @SequenceGenerator(name = "LOC_ID_SEQ", sequenceName = "LOC_ID_SEQ", allocationSize = 1)
+    private Long id;
+    private String name;
+    @Column(name = "locus_type")
+    private LocusType locusType;
+    private Float lat;
+    private Float lon;
+    /**
+     * radius in kilometers
+     */
+    private Float rad;
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Locus locus = (Locus) o;
+        return Objects.equals(id, locus.id);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hashCode(id);
+    }
+
+    @Override
+    public String toString() {
+        return "Locus{" +
+            "id=" + id +
+            ", name='" + name + '\'' +
+            ", locusType=" + locusType +
+            ", lat=" + lat +
+            ", lon=" + lon +
+            ", rad=" + rad +
+            '}';
+    }
+}

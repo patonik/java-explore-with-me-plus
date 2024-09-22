@@ -63,7 +63,7 @@ class PrivateEventControllerTest {
         newEventDto.setEventDate(eventDate.truncatedTo(ChronoUnit.SECONDS));
         newEventDto.setAnnotation("test annotation test annotation");
         newEventDto.setDescription("description test annotation test annotation");
-        newEventDto.setLocation(new Location(0.00, 0.00));
+        newEventDto.setLocation(new Location(0.00f, 0.00f));
         newEventDto.setTitle("test title");
         newEventDto.setCategoryId(1L);
     }
@@ -116,7 +116,7 @@ class PrivateEventControllerTest {
                 new UpdateEventUserRequest("01234567890123456789",
                         1L, "01234567890123456789",
                         null,
-                        new Location(0.0, 0.0),
+                        new Location(0.0f, 0.0f),
                         false,
                         10,
                         false,

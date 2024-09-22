@@ -16,6 +16,7 @@ import ru.practicum.admin.service.AdminEventService;
 import ru.practicum.dto.event.EventFullDto;
 import ru.practicum.dto.event.State;
 import ru.practicum.dto.event.UpdateEventAdminRequest;
+import ru.practicum.util.EventSearchParams;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -40,12 +41,15 @@ public class AdminEventController {
                                                         @RequestParam(required = false)
                                                         @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")
                                                         LocalDateTime rangeEnd,
+                                                        @RequestParam(required = false) List<Long> loci,
                                                         @RequestParam(required = false, defaultValue = "0")
                                                         Integer from,
                                                         @RequestParam(required = false, defaultValue = "10")
                                                         Integer size) {
+        EventSearchParams eventSearchParams =
+            new EventSearchParams(users, states, categories, rangeStart, rangeEnd, loci, from, size);
         return new ResponseEntity<>(
-            adminEventService.getEvents(users, states, categories, rangeStart, rangeEnd, from, size), HttpStatus.OK);
+            adminEventService.getEvents(eventSearchParams), HttpStatus.OK);
     }
 
     @PatchMapping("/{eventId}")
