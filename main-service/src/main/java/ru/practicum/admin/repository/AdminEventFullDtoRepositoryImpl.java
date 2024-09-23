@@ -5,6 +5,7 @@ import jakarta.persistence.PersistenceContext;
 import jakarta.persistence.TypedQuery;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
+import jakarta.persistence.criteria.Expression;
 import jakarta.persistence.criteria.Predicate;
 import jakarta.persistence.criteria.Root;
 import jakarta.persistence.criteria.Subquery;
@@ -104,13 +105,12 @@ public class AdminEventFullDtoRepositoryImpl implements AdminEventFullDtoReposit
             predicates.add(root.get("category").get("id").in(categories));
         }
         if (loci != null && !loci.isEmpty()) {
-            for (Long locusId : loci) {
-                Subquery<Locus> locusSubquery = cq.subquery(Locus.class);
-                Root<Locus> locusRoot = locusSubquery.from(Locus.class);
-                locusSubquery.select(locusRoot)
-                    .where(cb.equal(locusRoot.get("id"), locusId));
-
-                predicates.add(
+            Subquery<Long> locusSubquery = cq.subquery(Long.class);
+            Root<Locus> locusRoot = locusSubquery.from(Locus.class);
+            locusSubquery.select(locusRoot.get("id"));
+            locusSubquery.where(
+                cb.and(
+                    locusRoot.get("id").in(loci),
                     cb.lessThanOrEqualTo(
                         cb.function("distance",
                             Float.class,
@@ -121,8 +121,10 @@ public class AdminEventFullDtoRepositoryImpl implements AdminEventFullDtoReposit
                         ),
                         locusRoot.get("rad")
                     )
-                );
-            }
+                )
+            );
+            Expression<Long> selection = locusSubquery.getSelection();
+            predicates.add(selection.isNotNull());
         }
         if (rangeStart != null && rangeEnd != null) {
             predicates.add(cb.between(root.get("eventDate"), rangeStart, rangeEnd));

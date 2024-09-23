@@ -49,8 +49,8 @@ public class AdminLocusController {
     // Update an existing Locus by ID
     @PatchMapping("/{locusId}")
     public ResponseEntity<Locus> updateLocus(@PathVariable Long locusId,
-                                                @RequestBody @Valid LocusUpdateDto locus) {
-        return new ResponseEntity<>(adminLocusService.updateLocus(locusId, locus), HttpStatus.OK);
+                                                @RequestBody @Valid LocusUpdateDto locusUpdateDto) {
+        return new ResponseEntity<>(adminLocusService.updateLocus(locusId, locusUpdateDto), HttpStatus.OK);
     }
 
     // Delete a Locus by ID

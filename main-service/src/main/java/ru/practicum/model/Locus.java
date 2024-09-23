@@ -7,7 +7,9 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.SequenceGenerator;
 import jakarta.persistence.Table;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 import ru.practicum.dto.locus.LocusType;
 
@@ -17,6 +19,8 @@ import java.util.Objects;
 @Table(name = "LOCI")
 @Getter
 @Setter
+@NoArgsConstructor
+@AllArgsConstructor
 public class Locus {
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "LOC_ID_SEQ")
