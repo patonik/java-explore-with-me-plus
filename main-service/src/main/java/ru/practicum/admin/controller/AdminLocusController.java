@@ -28,32 +28,27 @@ public class AdminLocusController {
 
     private final AdminLocusService adminLocusService;
 
-    // Add a new Locus (location)
     @PostMapping
     public ResponseEntity<Locus> addLocus(@RequestBody @Valid NewLocusDto locus) {
         return new ResponseEntity<>(adminLocusService.addLocus(locus), HttpStatus.CREATED);
     }
 
-    // Get a list of all Loci
     @GetMapping
     public ResponseEntity<List<Locus>> getAllLoci() {
         return new ResponseEntity<>(adminLocusService.getAllLoci(), HttpStatus.OK);
     }
 
-    // Get a specific Locus by ID
     @GetMapping("/{locusId}")
     public ResponseEntity<Locus> getLocusById(@PathVariable Long locusId) {
         return new ResponseEntity<>(adminLocusService.getLocusById(locusId), HttpStatus.OK);
     }
 
-    // Update an existing Locus by ID
     @PatchMapping("/{locusId}")
     public ResponseEntity<Locus> updateLocus(@PathVariable Long locusId,
-                                                @RequestBody @Valid LocusUpdateDto locusUpdateDto) {
+                                             @RequestBody @Valid LocusUpdateDto locusUpdateDto) {
         return new ResponseEntity<>(adminLocusService.updateLocus(locusId, locusUpdateDto), HttpStatus.OK);
     }
 
-    // Delete a Locus by ID
     @DeleteMapping("/{locusId}")
     public ResponseEntity<Void> deleteLocus(@PathVariable Long locusId) {
         adminLocusService.deleteLocus(locusId);

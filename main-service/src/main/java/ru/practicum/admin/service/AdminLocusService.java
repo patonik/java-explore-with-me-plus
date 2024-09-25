@@ -3,7 +3,6 @@ package ru.practicum.admin.service;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.admin.repository.AdminLocusRepository;
 import ru.practicum.dto.locus.LocusMapper;
 import ru.practicum.dto.locus.LocusUpdateDto;
@@ -36,7 +35,6 @@ public class AdminLocusService {
         return adminLocusRepository.findById(locusId).orElseThrow(() -> new NotFoundException("Locus not found"));
     }
 
-    @Transactional()
     public Locus updateLocus(Long locusId, LocusUpdateDto locusUpdateDto) {
         Locus locus =
             adminLocusRepository.findById(locusId).orElseThrow(() -> new NotFoundException("Locus not found"));
