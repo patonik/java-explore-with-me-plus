@@ -20,8 +20,8 @@ import ru.practicum.dto.event.request.Status;
 import ru.practicum.exception.NotFoundException;
 import ru.practicum.model.Event;
 import ru.practicum.pub.repository.PublicEventRepository;
-import ru.practicum.util.LocalDateTimeComparator;
-import ru.practicum.util.Params;
+import ru.practicum.util.EventDtoByDateTimeComparator;
+import ru.practicum.util.StatParams;
 import ru.practicum.util.Statistical;
 
 import java.time.LocalDateTime;
@@ -47,10 +47,10 @@ public class PublicEventService {
         RequestCount requestCount = publicEventRepository.getRequestCountByEventAndStatus(id, Status.CONFIRMED);
         EventFullDto eventFullDto = eventFullDtoMapper.toDto(event,
                 requestCount.getConfirmedRequests(), 0L);
-        Params params = Statistical.getParams(List.of(eventFullDto));
-        log.info("parameters for statService created: {}", params);
+        StatParams statParams = Statistical.getParams(List.of(eventFullDto));
+        log.info("parameters for statService created: {}", statParams);
         List<StatResponseDto> statResponseDtoList =
-            httpStatsClient.getStats(params.start(), params.end(), params.uriList(), true);
+            httpStatsClient.getStats(statParams.start(), statParams.end(), statParams.uriList(), true);
         Long hits = 0L;
         if (!statResponseDtoList.isEmpty()) {
             hits = statResponseDtoList.getFirst().getHits();
@@ -74,10 +74,10 @@ public class PublicEventService {
             return shortDtos;
         }
         sendHitToStatsService(request);
-        Params params = Statistical.getParams(new ArrayList<>(shortDtos));
-        log.info("parameters for statService created: {}", params);
+        StatParams statParams = Statistical.getParams(new ArrayList<>(shortDtos));
+        log.info("parameters for statService created: {}", statParams);
         List<StatResponseDto> statResponseDtoList =
-            httpStatsClient.getStats(params.start(), params.end(), params.uriList(), true);
+            httpStatsClient.getStats(statParams.start(), statParams.end(), statParams.uriList(), true);
         Map<Long, Long> hitMap = statResponseDtoList
             .stream()
             .collect(Collectors.toMap(x -> Long.parseLong(x.getUri().split("/")[2]), StatResponseDto::getHits));
@@ -97,7 +97,7 @@ public class PublicEventService {
                 shortDtos.sort(Comparator.comparingLong(EventShortDto::getViews));
                 break;
             case EVENT_DATE:
-                shortDtos.sort(new LocalDateTimeComparator());
+                shortDtos.sort(new EventDtoByDateTimeComparator());
                 break;
         }
         return shortDtos;

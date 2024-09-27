@@ -84,7 +84,7 @@ class PrivateEventServiceTest {
     @Test
     void testAddEvent_Success() {
         NewEventDto newEventDto = new NewEventDto("Test Event", 1L, "Test Description", LocalDateTime.now().plusDays(1),
-                new ru.practicum.dto.event.Location(0.0, 0.0), false, 10, true, "Test Title");
+                new ru.practicum.dto.event.Location(0.0f, 0.0f), false, 10, true, "Test Title");
 
         when(privateUserRepository.findById(1L)).thenReturn(Optional.of(user));
         when(privateCategoryRepository.findById(1L)).thenReturn(Optional.of(category));
@@ -131,7 +131,7 @@ class PrivateEventServiceTest {
         Long confirmedRequests = 10L;
         UpdateEventUserRequest updateEventUserRequest =
                 new UpdateEventUserRequest("Updated Annotation", 1L, "Updated Description", LocalDateTime.now().plusDays(2),
-                        new ru.practicum.dto.event.Location(0.0, 0.0), false, 10, true,
+                        new ru.practicum.dto.event.Location(0.0f, 0.0f), false, 10, true,
                         ru.practicum.dto.event.UserStateAction.SEND_TO_REVIEW, "test title");
 
         when(privateEventRepository.findByIdAndInitiatorId(1L, 1L)).thenReturn(Optional.of(event));

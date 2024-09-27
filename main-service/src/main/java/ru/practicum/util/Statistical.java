@@ -8,12 +8,12 @@ import java.util.List;
 
 public interface Statistical {
 
-    static Params getParams(List<EventDto> events) {
+    static StatParams getParams(List<EventDto> events) {
         String end = LocalDateTime.now().format(DataTransferConvention.DATE_TIME_FORMATTER);
-        String start = events.stream().min(new LocalDateTimeComparator())
+        String start = events.stream().min(new EventDtoByDateTimeComparator())
                 .orElseThrow(() -> new RuntimeException("start date cannot be null")).getCreatedOn()
                 .format(DataTransferConvention.DATE_TIME_FORMATTER);
         List<String> uriList = events.stream().map(x -> "/events/" + x.getId()).toList();
-        return new Params(start, end, uriList);
+        return new StatParams(start, end, uriList);
     }
 }

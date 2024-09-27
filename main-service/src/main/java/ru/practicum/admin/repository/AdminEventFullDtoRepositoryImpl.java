@@ -5,6 +5,7 @@ import jakarta.persistence.PersistenceContext;
 import jakarta.persistence.TypedQuery;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
+import jakarta.persistence.criteria.Expression;
 import jakarta.persistence.criteria.Predicate;
 import jakarta.persistence.criteria.Root;
 import jakarta.persistence.criteria.Subquery;
@@ -15,6 +16,7 @@ import ru.practicum.dto.event.State;
 import ru.practicum.dto.event.request.Status;
 import ru.practicum.dto.user.UserShortDto;
 import ru.practicum.model.Event;
+import ru.practicum.model.Locus;
 import ru.practicum.model.Request;
 
 import java.time.LocalDateTime;
@@ -29,21 +31,17 @@ public class AdminEventFullDtoRepositoryImpl implements AdminEventFullDtoReposit
     public List<EventFullDto> getEventsOrderedById(List<Long> users,
                                                    List<State> states,
                                                    List<Long> categories,
+                                                   List<Long> loci,
                                                    LocalDateTime rangeStart,
                                                    LocalDateTime rangeEnd,
                                                    Pageable pageable) {
         CriteriaBuilder cb = em.getCriteriaBuilder();
         CriteriaQuery<EventFullDto> cq = cb.createQuery(EventFullDto.class);
         Root<Event> root = cq.from(Event.class);
-        Subquery<Long> subquery = cq.subquery(Long.class);
-        Root<Request> subRoot = subquery.from(Request.class);
-        subquery.select(cb.count(subRoot.get("id")));
-        subquery.where(
-            cb.equal(subRoot.get("event").get("id"), root.get("id")),
-            cb.equal(subRoot.get("status"), Status.CONFIRMED)
-        );
+        Subquery<Long> requestCountSubquery = getRequestCountSubquery(root, cb, cq);
 
-        List<Predicate> predicates = getPredicates(cb, root, users, states, categories, rangeStart, rangeEnd);
+        List<Predicate> predicates = getPredicates(cb, cq, root, users, states, categories, loci, rangeStart, rangeEnd);
+
         cq.select(cb.construct(EventFullDto.class,
             root.get("id"),
             root.get("annotation"),
@@ -61,7 +59,7 @@ public class AdminEventFullDtoRepositoryImpl implements AdminEventFullDtoReposit
             root.get("requestModeration"),
             root.get("title"),
             root.get("state"),
-            subquery.getSelection(),
+            requestCountSubquery.getSelection(),
             cb.nullLiteral(Long.class))
         );
         if (!predicates.isEmpty()) {
@@ -75,11 +73,25 @@ public class AdminEventFullDtoRepositoryImpl implements AdminEventFullDtoReposit
         return eventFullDtoTypedQuery.getResultList();
     }
 
-    private List<Predicate> getPredicates(CriteriaBuilder criteriaBuilder,
+    private Subquery<Long> getRequestCountSubquery(Root<Event> root, CriteriaBuilder cb,
+                                                   CriteriaQuery<EventFullDto> cq) {
+        Subquery<Long> subquery = cq.subquery(Long.class);
+        Root<Request> subRoot = subquery.from(Request.class);
+        subquery.select(cb.count(subRoot.get("id")));
+        subquery.where(
+            cb.equal(subRoot.get("event").get("id"), root.get("id")),
+            cb.equal(subRoot.get("status"), Status.CONFIRMED)
+        );
+        return subquery;
+    }
+
+    private List<Predicate> getPredicates(CriteriaBuilder cb,
+                                          CriteriaQuery<EventFullDto> cq,
                                           Root<Event> root,
                                           List<Long> users,
                                           List<State> states,
                                           List<Long> categories,
+                                          List<Long> loci,
                                           LocalDateTime rangeStart,
                                           LocalDateTime rangeEnd) {
         List<Predicate> predicates = new ArrayList<>();
@@ -92,12 +104,34 @@ public class AdminEventFullDtoRepositoryImpl implements AdminEventFullDtoReposit
         if (categories != null && !categories.isEmpty()) {
             predicates.add(root.get("category").get("id").in(categories));
         }
+        if (loci != null && !loci.isEmpty()) {
+            Subquery<Long> locusSubquery = cq.subquery(Long.class);
+            Root<Locus> locusRoot = locusSubquery.from(Locus.class);
+            locusSubquery.select(locusRoot.get("id"));
+            locusSubquery.where(
+                cb.and(
+                    locusRoot.get("id").in(loci),
+                    cb.lessThanOrEqualTo(
+                        cb.function("distance",
+                            Float.class,
+                            locusRoot.get("lat"),
+                            locusRoot.get("lon"),
+                            root.get("location").get("lat"),
+                            root.get("location").get("lon")
+                        ),
+                        locusRoot.get("rad")
+                    )
+                )
+            );
+            Expression<Long> selection = locusSubquery.getSelection();
+            predicates.add(selection.isNotNull());
+        }
         if (rangeStart != null && rangeEnd != null) {
-            predicates.add(criteriaBuilder.between(root.get("eventDate"), rangeStart, rangeEnd));
+            predicates.add(cb.between(root.get("eventDate"), rangeStart, rangeEnd));
         } else if (rangeStart != null) {
-            predicates.add(criteriaBuilder.between(root.get("eventDate"), rangeStart, LocalDateTime.now()));
+            predicates.add(cb.between(root.get("eventDate"), rangeStart, LocalDateTime.now()));
         } else {
-            predicates.add(criteriaBuilder.greaterThan(root.get("eventDate"), LocalDateTime.now()));
+            predicates.add(cb.greaterThan(root.get("eventDate"), LocalDateTime.now()));
         }
         return predicates;
     }

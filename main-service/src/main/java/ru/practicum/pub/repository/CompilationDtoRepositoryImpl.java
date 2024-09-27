@@ -16,7 +16,7 @@ import ru.practicum.dto.event.EventShortDto;
 import ru.practicum.dto.event.request.Status;
 import ru.practicum.model.Compilation;
 import ru.practicum.model.Request;
-import ru.practicum.util.Params;
+import ru.practicum.util.StatParams;
 import ru.practicum.util.Statistical;
 
 import java.util.ArrayList;
@@ -66,9 +66,9 @@ public class CompilationDtoRepositoryImpl implements CompilationDtoRepository {
         log.info("Populated confReqList: {}", confReqMap);
 
         // get map of hits for each event id (no entries for events without views)
-        Params params = Statistical.getParams(new ArrayList<>(eventShortDtos));
+        StatParams statParams = Statistical.getParams(new ArrayList<>(eventShortDtos));
         List<StatResponseDto> statResponseDtoList =
-                httpStatsClient.getStats(params.start(), params.end(), params.uriList(), true);
+                httpStatsClient.getStats(statParams.start(), statParams.end(), statParams.uriList(), true);
         Map<Long, Long> hitMap = statResponseDtoList
                 .stream()
                 .collect(Collectors.toMap(x -> Long.parseLong(x.getUri().split("/")[2]), StatResponseDto::getHits));

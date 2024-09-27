@@ -56,7 +56,7 @@ class PrivateEventRepositoryTest {
             .eventDate(LocalDateTime.now().plusDays(1))
             .description("Test Event Description")
             .initiator(initiator)
-            .location(new ru.practicum.dto.event.Location(0.0, 0.0))
+            .location(new ru.practicum.dto.event.Location(0.0f, 0.0f))
             .paid(false)
             .participantLimit(10)
             .requestModeration(true)
